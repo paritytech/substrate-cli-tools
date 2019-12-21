@@ -1,10 +1,10 @@
-const { ApiPromise, WsProvider } = require('@polkadot/api');
+#!/usr/bin/env node
 
-const wsProvider = new WsProvider('ws://127.0.0.1:9944');
-// const wsProvider = new WsProvider('wss://cc3-5.kusama.network/');
+const { ApiPromise } = require('@polkadot/api');
+const { getWsProvider } = require('./common.ts');
 
 async function main() {
-    const api = new ApiPromise({ provider: wsProvider });
+    const api = new ApiPromise({ provider: getWsProvider() });
     await api.isReady;
 
     api.query.system.events((events) => {

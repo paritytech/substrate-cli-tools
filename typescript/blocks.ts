@@ -1,25 +1,12 @@
-const { ApiPromise, WsProvider } = require('@polkadot/api');
+#!/usr/bin/env node
 
-const localNode = 'ws://127.0.0.1:9944';
-
-//todo: move to common
-function getWsProvider() {
-    const i = process.argv.findIndex((argument) => argument === "--url");
-    if (i < 0) {
-        return new WsProvider(localNode);
-    } else if (process.argv.length < i + 2) {
-        console.error("Encountered `--url` option, but no url provided.");
-        process.exit(22);
-    }
-    const url = process.argv[i + 1];
-    console.log(`Connecting to ${url}`);
-    return new WsProvider(url);
-}
+const { ApiPromise } = require('@polkadot/api');
+const { getWsProvider } = require('./common.ts');
 
 async function main() {
     const pretty = process.argv.includes("--pretty");
     const displayFull = process.argv.includes("--full");
-    const displayHeader = process.argv.includes("--head");
+    const displayHeader = process.argv.includes("--header");
     const includeHistorical = process.argv.includes("--all");
     //todo: option to display finalized only
 
@@ -57,8 +44,9 @@ async function main() {
         }
     }
 
-    await api.rpc.chain.subscribeNewHeads()
-        .pipe() ((header) => {
+    //todo: lag compensation between historical data and new one
+
+    await api.rpc.chain.subscribeNewHeads((header) => {
         if (displayHeader) {
             display(pretty, header.number, header);
         } else if (displayFull) {

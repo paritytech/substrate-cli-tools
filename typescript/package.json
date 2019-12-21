@@ -1,0 +1,12 @@
+{
+  "name": "substrate-cli-tools",
+  "author": "Kirill Taran",
+  "dependencies": {
+    "@polkadot/api": "^0.99.0-beta.15"
+  },
+  "bin": {
+    "rpc-info": "./info.ts",
+    "rpc-events": "./events.ts",
+    "rpc-blocks": "./blocks.ts"
+  }
+}

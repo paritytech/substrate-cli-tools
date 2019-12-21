@@ -1,3 +1,0 @@
-#!/bin/bash
-ROOT=$(dirname $(dirname $0))
-node $ROOT/js/info.ts $@
