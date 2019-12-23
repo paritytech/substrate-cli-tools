@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 
+// @ts-ignore
 const { ApiPromise } = require('@polkadot/api');
-const { getWsProvider } = require('./common.ts');
+const { EventRecord } = require('@polkadot/api');
+const { Vec } = require('@polkadot/types/interfaces');
+// @ts-ignore
+const { getWsProvider } = require('./common');
 
+// @ts-ignore
 async function main() {
     const api = new ApiPromise({ provider: getWsProvider() });
     await api.isReady;
 
-    api.query.system.events((events) => {
+    api.query.system.events((events: Vec<EventRecord>) => {
         console.log(`Received ${events.length} events:`);
 
         events.forEach((record) => {
@@ -18,7 +23,7 @@ async function main() {
                 console.log(`\t\t${event.meta.documentation.toString()}`);
 
                 const types = event.typeDef;
-                event.data.forEach((data, index) => {
+                event.data.forEach((data, index: number) => {
                     console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
                 });
             // }

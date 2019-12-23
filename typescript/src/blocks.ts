@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
+// @ts-ignore
 const { ApiPromise } = require('@polkadot/api');
-const { getWsProvider } = require('./common.ts');
+// @ts-ignore
+const { getWsProvider } = require('./common');
 
+// @ts-ignore
 async function main() {
     const pretty = process.argv.includes("--pretty");
     const displayFull = process.argv.includes("--full");
@@ -18,11 +21,7 @@ async function main() {
     const display = displayFull || displayHeader ? displayWithDetails : displayOnlyHash;
 
     const api = await ApiPromise.create({ provider: getWsProvider() });
-
-    const [chain, last] = await Promise.all([
-        api.rpc.system.chain(),
-        api.rpc.chain.getHeader()
-    ]);
+    const last = await api.rpc.chain.getHeader();
 
     if (includeHistorical) {
         const n = last.number.toNumber();
@@ -30,7 +29,7 @@ async function main() {
         const hashPromises = Array.from({length: n},
             (_, i) => api.rpc.chain.getBlockHash(i + 1));
 
-        var promises;
+        let promises;
         if (displayHeader || displayFull) {
             const retrieve = displayFull ? api.rpc.chain.getBlock : api.rpc.chain.getHeader;
             promises = hashPromises.map((promise) => promise.then((hash) => retrieve(hash)));
@@ -71,11 +70,11 @@ async function main() {
     });
 }
 
-function displayOnlyHash(_, number, hash) {
+function displayOnlyHash(_: boolean, number, hash) {
     console.log(`#${number}: ${hash.toString()}`);
 }
 
-function displayWithDetails(pretty, number, item) {
+function displayWithDetails(pretty: boolean, number, item) {
     console.log(`=== #${number} ===`);
     if (pretty) {
         console.log(JSON.stringify(item, null, 2));

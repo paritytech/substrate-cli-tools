@@ -13,6 +13,8 @@ Link binaries into yarn folder:
 ```
 cd typescript
 yarn install
+tsc
+chmod +x dist/info.js dist/events.js dist/blocks.js
 yarn link
 ```
 

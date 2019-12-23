@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
-const { ApiPromise } = require('@polkadot/api');
-const { getWsProvider } = require('./common.ts');
+// @ts-ignore
+const { ApiPromise } = require("@polkadot/api");
+// @ts-ignore
+const { getWsProvider } = require("./common");
 
+// @ts-ignore
 async function main() {
     const api = await ApiPromise.create({ provider: getWsProvider() });
 
@@ -20,7 +23,7 @@ async function main() {
             api.rpc.system.peers(),
             api.rpc.system.properties(),
             api.rpc.system.version(),
-            api.rpc.state.getMetadata()
+            api.rpc.state.getMetadata(),
         ]);
 
     console.log(JSON.stringify(meta, null, 2));

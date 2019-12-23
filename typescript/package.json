@@ -5,8 +5,8 @@
     "@polkadot/api": "^0.99.0-beta.15"
   },
   "bin": {
-    "rpc-info": "./info.ts",
-    "rpc-events": "./events.ts",
-    "rpc-blocks": "./blocks.ts"
+    "rpc-info": "./dist/info.js",
+    "rpc-events": "./dist/events.js",
+    "rpc-blocks": "./dist/blocks.js"
   }
 }
