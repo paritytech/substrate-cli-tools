@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 // @ts-ignore
-const { ApiPromise } = require('@polkadot/api');
+import { ApiPromise } from '@polkadot/api';
 // @ts-ignore
-const { getWsProvider } = require('./common');
+import { getWsProvider } from './common';
 
 // @ts-ignore
 async function main() {

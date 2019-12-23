@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 // @ts-ignore
-const { ApiPromise } = require('@polkadot/api');
-const { EventRecord } = require('@polkadot/api');
-const { Vec } = require('@polkadot/types/interfaces');
+import { ApiPromise } from '@polkadot/api';
+import { EventRecord } from '@polkadot/types/interfaces';
+import { Vec } from '@polkadot/types';
+
 // @ts-ignore
 const { getWsProvider } = require('./common');
 

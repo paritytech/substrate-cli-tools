@@ -2,11 +2,19 @@
   "name": "substrate-cli-tools",
   "author": "Kirill Taran",
   "dependencies": {
-    "@polkadot/api": "^0.99.0-beta.15"
+    "@polkadot/api": "^0.99.0-beta.15",
+    "ts-node": "^8.5.4"
   },
-  "bin": {
-    "rpc-info": "./dist/info.js",
-    "rpc-events": "./dist/events.js",
-    "rpc-blocks": "./dist/blocks.js"
-  }
+  "scripts": {
+    "rpc-info": "ts-node ./src/info.ts",
+    "rpc-events": "ts-node ./src/events.ts",
+    "rpc-blocks": "ts-node ./src/blocks.ts"
+  },
+  "devDependencies": {
+    "@polkadot/dev": "^0.32.13"
+  },
+  "description": "``` echo \"export PATH=$(yarn global bin):$PATH'\" >> ~/.bashrc source ~/.bashrc yarn install tsc chmod +x dist/info.js dist/events.js dist/blocks.js yarn link ```",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "Apache-2.0"
 }

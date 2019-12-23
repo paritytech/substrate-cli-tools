@@ -1,8 +1,8 @@
-const { WsProvider } = require('@polkadot/api');
+import { WsProvider } from '@polkadot/api';
 
-export const LOCAL_NODE = 'ws://127.0.0.1:9944';
+export const LOCAL_NODE = 'wss://cc3-5.kusama.network/';
 
-export function getWsProvider(): typeof WsProvider {
+export function getWsProvider(): WsProvider {
     const i = process.argv.findIndex((argument) => argument === "--url");
     if (i < 0) {
         return new WsProvider(LOCAL_NODE);
