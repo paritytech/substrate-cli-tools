@@ -1,6 +1,8 @@
-import { WsProvider } from '@polkadot/api';
+import { WsProvider } from "@polkadot/api";
+import { PromiseResult } from "@polkadot/api/types";
+import { Observable } from "rxjs";
 
-export const LOCAL_NODE = 'wss://cc3-5.kusama.network/';
+export const LOCAL_NODE = "ws://127.0.0.1:9944";
 
 export function getWsProvider(): WsProvider {
     const i = process.argv.findIndex((argument) => argument === "--url");
@@ -15,5 +17,6 @@ export function getWsProvider(): WsProvider {
     return new WsProvider(url);
 }
 
-//exports.LOCAL_NODE = LOCAL_NODE;
-//exports.getWsProvider = getWsProvider;
+export function textify<X, Y>(f: PromiseResult<(X) => Observable<Y>>): (X) => Promise<string> {
+    return (x: X) => f(x).then((y) => y.toString());
+}

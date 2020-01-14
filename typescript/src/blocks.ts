@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 
-// @ts-ignore
-import { ApiPromise } from '@polkadot/api';
-// @ts-ignore
-import { getWsProvider } from './common';
+import { ApiPromise } from "@polkadot/api";
+import { getWsProvider, textify } from "./common";
+// import { mergeMap } from 'rxjs/operators';
 
-// @ts-ignore
 async function main() {
     const pretty = process.argv.includes("--pretty");
     const displayFull = process.argv.includes("--full");
     const displayHeader = process.argv.includes("--header");
-    const includeHistorical = process.argv.includes("--all");
-    //todo: option to display finalized only
+
+    const all = process.argv.includes("--all");
+    const includeHistorical = all || process.argv.includes("--old");
+    const subscribeToNew = all || process.argv.includes("--new");
+    // todo: option to display finalized only
 
     if (displayFull && displayHeader) {
         console.error("Choose maximum one display mode.");
@@ -31,7 +32,10 @@ async function main() {
 
         let promises;
         if (displayHeader || displayFull) {
-            const retrieve = displayFull ? api.rpc.chain.getBlock : api.rpc.chain.getHeader;
+            const retrieve = displayFull ?
+                textify(api.rpc.chain.getBlock) :
+                textify(api.rpc.chain.getHeader);
+
             promises = hashPromises.map((promise) => promise.then((hash) => retrieve(hash)));
         } else {
             promises = hashPromises;
@@ -43,31 +47,35 @@ async function main() {
         }
     }
 
-    //todo: lag compensation between historical data and new one
+    // todo: lag compensation between historical data and new one
 
-    await api.rpc.chain.subscribeNewHeads((header) => {
-        if (displayHeader) {
-            display(pretty, header.number, header);
-        } else if (displayFull) {
-            //fixme:
-            //const block = api.rpc.chain.getBlock(header);
-            //display(pretty, header.number, block);
-            display(pretty, header.number, header);
+    if (subscribeToNew) {
+        await api.rpc.chain.subscribeNewHeads((header) => {
+            if (displayHeader) {
+                display(pretty, header.number, header);
+            } else if (displayFull) {
+                // fixme:
+                // const block = api.rpc.chain.getBlock(header);
+                // display(pretty, header.number, block);
+                display(pretty, header.number, header);
 
-            //rough idea by YJ:
-            // const unsub = await api.rpx.chain.subscribeNewHeads()
-            //     .pipe(() =>
-            //         switchMap((header) => {
-            //             // get block and do some stuff
-            //
-            //             return obervable<results>
-            //         }).subscribe((results) => { ... do stuff })
-            //
-            // unsub()
-        } else {
-            display(pretty, header.number, header.hash);
-        }
-    });
+                // rough idea by YJ:
+                // const unsub = await api.rpx.chain.subscribeNewHeads()
+                //     .pipe(() =>
+                //         switchMap((header) => {
+                //             // get block and do some stuff
+                //
+                //             return obervable<results>
+                //         }).subscribe((results) => { ... do stuff })
+                //
+                // unsub()
+            } else {
+                display(pretty, header.number, header.hash);
+            }
+        });
+    } else {
+        process.exit(0);
+    }
 }
 
 function displayOnlyHash(_: boolean, number, hash) {

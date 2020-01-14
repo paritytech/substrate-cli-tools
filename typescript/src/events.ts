@@ -1,14 +1,10 @@
 #!/usr/bin/env node
 
-// @ts-ignore
-import { ApiPromise } from '@polkadot/api';
-import { EventRecord } from '@polkadot/types/interfaces';
-import { Vec } from '@polkadot/types';
+import { ApiPromise } from "@polkadot/api";
+import { Vec } from "@polkadot/types";
+import { EventRecord } from "@polkadot/types/interfaces";
+import { getWsProvider } from "./common";
 
-// @ts-ignore
-const { getWsProvider } = require('./common');
-
-// @ts-ignore
 async function main() {
     const api = new ApiPromise({ provider: getWsProvider() });
     await api.isReady;
@@ -20,13 +16,13 @@ async function main() {
             const { event, phase } = record;
 
             // if (event.section == "contracts") {
-                console.log(`\t${event.section}:${event.method}:: (phase=${phase.toString()})`);
-                console.log(`\t\t${event.meta.documentation.toString()}`);
+            console.log(`\t${event.section}:${event.method}:: (phase=${phase.toString()})`);
+            console.log(`\t\t${event.meta.documentation.toString()}`);
 
-                const types = event.typeDef;
-                event.data.forEach((data, index: number) => {
-                    console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
-                });
+            const types = event.typeDef;
+            event.data.forEach((data, index: number) => {
+                console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
+            });
             // }
         });
 

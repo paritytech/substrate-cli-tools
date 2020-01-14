@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 
-// @ts-ignore
-const { ApiPromise } = require("@polkadot/api");
-// @ts-ignore
-const { getWsProvider } = require("./common");
+import { ApiPromise } from "@polkadot/api";
+import { getWsProvider } from "./common";
 
-// @ts-ignore
 async function main() {
     const api = await ApiPromise.create({ provider: getWsProvider() });
 
