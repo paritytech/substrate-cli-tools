@@ -3,7 +3,7 @@
 import { ApiPromise } from "@polkadot/api";
 import { Compact } from "@polkadot/types/codec";
 import { BlockNumber, Hash, Header, SignedBlock } from "@polkadot/types/interfaces";
-import { getWsProvider } from "./common";
+import { getWsProvider } from "./utils/common";
 
 async function main() {
     const pretty = process.argv.includes("--pretty");

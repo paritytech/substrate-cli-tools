@@ -3,7 +3,7 @@
 import { ApiPromise } from "@polkadot/api";
 import { Vec } from "@polkadot/types";
 import { EventRecord } from "@polkadot/types/interfaces";
-import { getWsProvider } from "./common";
+import { getWsProvider } from "./utils/common";
 
 async function main() {
     const api = new ApiPromise({ provider: getWsProvider() });

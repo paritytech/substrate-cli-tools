@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { ApiPromise } from "@polkadot/api";
-import { getWsProvider } from "./common";
+import { getWsProvider } from "./utils/common";
 
 async function main() {
     const api = await ApiPromise.create({ provider: getWsProvider() });
