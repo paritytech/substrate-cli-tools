@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { ApiPromise } from "@polkadot/api";
-import { getWsProvider, textify } from "./common";
-// import { mergeMap } from 'rxjs/operators';
+import { Compact } from "@polkadot/types/codec";
+import { BlockNumber, Hash, Header, SignedBlock } from "@polkadot/types/interfaces";
+import { getWsProvider } from "./common";
 
 async function main() {
     const pretty = process.argv.includes("--pretty");
@@ -19,8 +20,6 @@ async function main() {
         process.exit(22);
     }
 
-    const display = displayFull || displayHeader ? displayWithDetails : displayOnlyHash;
-
     const api = await ApiPromise.create({ provider: getWsProvider() });
     const last = await api.rpc.chain.getHeader();
 
@@ -30,11 +29,11 @@ async function main() {
         const hashPromises = Array.from({length: n},
             (_, i) => api.rpc.chain.getBlockHash(i + 1));
 
-        let promises;
+        let promises: Array<Promise<Hash | Header | SignedBlock>>;
         if (displayHeader || displayFull) {
-            const retrieve = displayFull ?
-                textify(api.rpc.chain.getBlock) :
-                textify(api.rpc.chain.getHeader);
+            const retrieve: (Hash) => Promise<Header | SignedBlock> = displayFull ?
+                api.rpc.chain.getBlock :
+                api.rpc.chain.getHeader;
 
             promises = hashPromises.map((promise) => promise.then((hash) => retrieve(hash)));
         } else {
@@ -51,24 +50,11 @@ async function main() {
 
     if (subscribeToNew) {
         await api.rpc.chain.subscribeNewHeads((header) => {
-            if (displayHeader) {
+            if (displayFull) {
+                api.rpc.chain.getBlock(header.hash)
+                    .then((block) => display(pretty, header.number, block));
+            } else if (displayHeader) {
                 display(pretty, header.number, header);
-            } else if (displayFull) {
-                // fixme:
-                // const block = api.rpc.chain.getBlock(header);
-                // display(pretty, header.number, block);
-                display(pretty, header.number, header);
-
-                // rough idea by YJ:
-                // const unsub = await api.rpx.chain.subscribeNewHeads()
-                //     .pipe(() =>
-                //         switchMap((header) => {
-                //             // get block and do some stuff
-                //
-                //             return obervable<results>
-                //         }).subscribe((results) => { ... do stuff })
-                //
-                // unsub()
             } else {
                 display(pretty, header.number, header.hash);
             }
@@ -78,16 +64,18 @@ async function main() {
     }
 }
 
-function displayOnlyHash(_: boolean, number, hash) {
-    console.log(`#${number}: ${hash.toString()}`);
-}
+type N = number | Compact<BlockNumber>;
 
-function displayWithDetails(pretty: boolean, number, item) {
-    console.log(`=== #${number} ===`);
-    if (pretty) {
-        console.log(JSON.stringify(item, null, 2));
+function display(pretty: boolean, n: N, item: Hash | Header | SignedBlock) {
+    if ("block" in item || "parentHash" in item) {
+        console.log(`=== #${n} ===`);
+        if (pretty) {
+            console.log(JSON.stringify(item, null, 2));
+        } else {
+            console.log(`${item.toString()}`);
+        }
     } else {
-        console.log(`${item.toString()}`);
+        console.log(`#${n}: ${item.toString()}`);
     }
 }
 
