@@ -9,24 +9,30 @@ async function main() {
     const api = new ApiPromise({ provider: getWsProvider() });
     await api.isReady;
 
-    api.query.system.events((events: Vec<EventRecord>) => {
-        console.log(`Received ${events.length} events:`);
+    const filters = process.argv.slice(2);
+    const displayAll = filters.length === 0;
 
+    api.query.system.events((events: Vec<EventRecord>) => {
+        let matchedEvents = 0;
         events.forEach((record) => {
             const { event, phase } = record;
 
-            // if (event.section == "contracts") {
-            console.log(`\t${event.section}:${event.method}:: (phase=${phase.toString()})`);
-            console.log(`\t\t${event.meta.documentation.toString()}`);
+            if (displayAll || filters.includes(event.section)) {
+                console.log(`${event.section}:${event.method}:: (phase=${phase.toString()})`);
+                console.log(`\t${event.meta.documentation.toString()}`);
 
-            const types = event.typeDef;
-            event.data.forEach((data, index: number) => {
-                console.log(`\t\t\t${types[index].type}: ${data.toString()}`);
-            });
-            // }
+                const types = event.typeDef;
+                event.data.forEach((data, index: number) => {
+                    console.log(`\t\t${types[index].type}: ${data.toString()}`);
+                });
+
+                matchedEvents += 1;
+            }
         });
 
-        console.log("\n");
+        if (matchedEvents > 0) {
+            console.log(`(${matchedEvents} matching events received)\n`);
+        }
     });
 }
 
