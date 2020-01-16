@@ -3,7 +3,8 @@
   "author": "Kirill Taran",
   "dependencies": {
     "@polkadot/api": "^0.99.0-beta.15",
-    "ts-node": "^8.5.4"
+    "ts-node": "^8.5.4",
+    "yargs": "^15.1.0"
   },
   "scripts": {
     "rpc-info": "ts-node ./src/info.ts",
@@ -13,6 +14,7 @@
   },
   "devDependencies": {
     "@polkadot/dev": "^0.32.13",
+    "@types/yargs": "^15.0.0",
     "tslint": "^5.20.1"
   },
   "description": "Small toolset for productivity with console",

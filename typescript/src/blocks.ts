@@ -48,8 +48,10 @@ async function main() {
 
     // todo: lag compensation between historical data and new one
 
+    // todo: headers from `api.derive` also provide info about author, display it in full blocks mode also
+
     if (subscribeToNew) {
-        await api.rpc.chain.subscribeNewHeads((header) => {
+        await api.derive.chain.subscribeNewHeads((header) => {
             if (displayFull) {
                 api.rpc.chain.getBlock(header.hash)
                     .then((block) => display(pretty, header.number, block));
