@@ -3,7 +3,7 @@
 import { ApiPromise } from "@polkadot/api";
 import { Compact } from "@polkadot/types/codec";
 import { BlockNumber, Hash, Header, SignedBlock } from "@polkadot/types/interfaces";
-import { getWsProvider } from "./utils/common";
+import { getWsProvider } from "./utils/connection";
 
 async function main() {
     const pretty = process.argv.includes("--pretty");
@@ -24,6 +24,7 @@ async function main() {
     const last = await api.rpc.chain.getHeader();
 
     if (includeHistorical) {
+        // @ts-ignore
         const n = last.number.toNumber();
 
         const hashPromises = Array.from({length: n},

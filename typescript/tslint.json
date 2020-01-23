@@ -3,6 +3,8 @@
     "extends": [
         "tslint:recommended"
     ],
+    "interface-name": false,
+    "member-ordering": false,
     "jsRules": {},
     "rules": {
         "no-console": false
