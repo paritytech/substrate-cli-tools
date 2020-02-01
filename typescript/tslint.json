@@ -3,6 +3,9 @@
     "extends": [
         "tslint:recommended"
     ],
+    "object-literal-sort-keys": {
+        "options": "match-declaration-order"
+    },
     "interface-name": false,
     "member-ordering": false,
     "jsRules": {},

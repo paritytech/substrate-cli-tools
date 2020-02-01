@@ -38,17 +38,19 @@ async function main() {
             (args: Argv) => {
                 return args
                     .option("hash", { alias: "h", type: "string" })
-                    .option("endowment", { alias: "e", type: "string" });
+                    .option("endowment", { alias: "e", type: "string" })
+                    .option("data", { alias: "d", type: "string" });
             }, async (args) => {
                 const signer = provideSigner(keyring, args);
 
                 const codeHash = new H256(api.registry, args.hash);
                 const gas = args.gas as number;
                 const endowment = balance(token, args.endowment);
+                const data = args.data;
 
                 console.log(`Instantiating contract with hash ${codeHash}, ${token.display(endowment)} as an endowment and ${gas} of gas`);
 
-                const address = await instantiate(api, signer, codeHash, "", endowment, gas);
+                const address = await instantiate(api, signer, codeHash, data, endowment, gas);
                 console.log(`Contract instantiated with address ${address}`);
 
                 process.exit(0);
@@ -58,6 +60,14 @@ async function main() {
                 return args; // .option("file", { alias: "f", default: "contract.wasm" });
             }, (args: Arguments) => {
                 console.log("<Not implemented yet>");
+                process.exit(0);
+            })
+        .command("info", "Grab some information about instantiated contract",
+            (args: Argv) => {
+                return args.option("address", { alias: "a", type: "string" });
+            }, async (args) => {
+                const info = await api.query.contracts.contractInfoOf(args.address);
+                console.log(JSON.stringify(info, null, 2));
                 process.exit(0);
             })
         .demandCommand()
