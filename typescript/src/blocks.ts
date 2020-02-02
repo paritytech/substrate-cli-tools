@@ -4,6 +4,7 @@ import { ApiPromise } from "@polkadot/api";
 import { Compact } from "@polkadot/types/codec";
 import { BlockNumber, Hash, Header, SignedBlock } from "@polkadot/types/interfaces";
 import { getWsProvider } from "./utils/connection";
+import { CUSTOM_TYPES } from "./utils/types";
 
 async function main() {
     const pretty = process.argv.includes("--pretty");
@@ -20,7 +21,11 @@ async function main() {
         process.exit(22);
     }
 
-    const api = await ApiPromise.create({ provider: getWsProvider() });
+    const api = await ApiPromise.create({
+        provider: getWsProvider(),
+        types: CUSTOM_TYPES,
+    });
+
     const last = await api.rpc.chain.getHeader();
 
     if (includeHistorical) {

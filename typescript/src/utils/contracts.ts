@@ -1,36 +1,13 @@
-// THIS FILE IS TAKEN FROM https://github.com/paritytech/srml-contracts-waterfall
-// todo: find a way to import it properly
-
 import { ApiPromise, SubmittableResult } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
 import { Option, StorageData } from "@polkadot/types";
-import { EventRecord } from "@polkadot/types/interfaces";
 import { Address, ContractInfo, Hash } from "@polkadot/types/interfaces";
 import { u8aToHex } from "@polkadot/util";
+import { sendAndReturnFinalized } from "./signer";
 import BN from "bn.js";
 import fs from "fs";
 
 const blake = require('blakejs');
-
-export async function sendAndReturnFinalized(signer: KeyringPair, tx: any) {
-  return new Promise((resolve, reject) => {
-    tx.signAndSend(signer, (result: SubmittableResult) => {
-      if (result.status.isFinalized) {
-        // Return result of the submittable extrinsic after the transfer is finalized
-        console.log("Result received:", JSON.stringify(result, null, 2));
-        console.log("Events received:", result.events.map((e: EventRecord) =>
-            `${e.event.section}: ${e.event.method}`));
-        resolve(result as SubmittableResult);
-      }
-      if (result.status.isDropped ||
-          result.status.isInvalid ||
-          result.status.isUsurped) {
-        reject(result as SubmittableResult);
-        throw new Error("Transaction could not be finalized.");
-      }
-    });
-  });
-}
 
 function reportFailure(operation: string, result: SubmittableResult) {
   const failure = result.findRecord("system", "ExtrinsicFailed");

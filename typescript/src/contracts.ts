@@ -1,20 +1,23 @@
 #!/usr/bin/env node
 
 import { ApiPromise, Keyring } from "@polkadot/api";
-import { KeyringPair } from "@polkadot/keyring/types";
 import { H256 } from "@polkadot/types";
-import { Balance } from "@polkadot/types/interfaces/runtime";
-import { getWsProvider} from "./utils/connection";
+import { getWsProvider } from "./utils/connection";
 import { callContract, instantiate, putCode } from "./utils/contracts";
+import { getSigner } from "./utils/signer";
 import TokenUnit from "./utils/token";
 
 import yargs = require("yargs");
-import {Arguments, Argv} from "yargs";
+import { Arguments, Argv } from "yargs";
 
-import BN from "bn.js";
+import { CUSTOM_TYPES } from "./utils/types";
 
 async function main() {
-    const api = await ApiPromise.create({ provider: getWsProvider() });
+    const api = await ApiPromise.create({
+        provider: getWsProvider(),
+        types: CUSTOM_TYPES,
+    });
+
     const token = await TokenUnit.provide(api);
     const keyring = new Keyring({ type: "sr25519" });
 
@@ -25,10 +28,10 @@ async function main() {
             (args: Argv) => {
                 return args.option("file", { alias: "f", type: "string" });
             }, async (args) => {
-                const signer = provideSigner(keyring, args);
-
                 const gas = args.gas as number;
                 console.log(`Deploying code from file ${args.file} with ${gas} of gas`);
+
+                const signer = getSigner(keyring, args);
                 const hash = await putCode(api, signer, args.file, gas);
                 console.log(`Code deployed with hash ${hash}`);
 
@@ -41,15 +44,14 @@ async function main() {
                     .option("endowment", { alias: "e", type: "string" })
                     .option("data", { alias: "d", type: "string" });
             }, async (args) => {
-                const signer = provideSigner(keyring, args);
-
                 const codeHash = new H256(api.registry, args.hash);
                 const gas = args.gas as number;
-                const endowment = balance(token, args.endowment);
+                const endowment = token.parseBalance(args.endowment);
                 const data = args.data;
 
                 console.log(`Instantiating contract with hash ${codeHash}, ${token.display(endowment)} as an endowment and ${gas} of gas`);
 
+                const signer = getSigner(keyring, args);
                 const address = await instantiate(api, signer, codeHash, data, endowment, gas);
                 console.log(`Contract instantiated with address ${address}`);
 
@@ -72,24 +74,6 @@ async function main() {
             })
         .demandCommand()
         .argv;
-}
-
-function balance(token: TokenUnit, raw: string): Balance {
-    if (raw.endsWith(token.symbol)) {
-        return token.multiply(new BN(raw.substring(0, raw.length - token.symbol.length), 10));
-    } else {
-        return new BN(raw, 10) as Balance;
-    }
-}
-
-function provideSigner(keyring: Keyring, args: Arguments): KeyringPair {
-    // @ts-ignore
-    const signer = keyring.addFromUri(args.seed);
-    console.log(`Signing transaction with "${signer.meta.name}":
-        address: ${signer.address}
-        public key: ${signer.publicKey}`);
-
-    return signer;
 }
 
 main().catch((error) => {

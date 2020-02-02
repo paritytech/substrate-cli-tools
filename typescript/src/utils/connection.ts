@@ -14,4 +14,3 @@ export function getWsProvider(): WsProvider {
     console.log(`Connecting to ${url}`);
     return new WsProvider(url);
 }
-

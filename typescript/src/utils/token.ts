@@ -31,6 +31,15 @@ export default class TokenUnit {
         return token;
     }
 
+    public parseBalance(raw: string): Balance {
+        if (raw.endsWith(this.symbol)) {
+            const value = raw.substring(0, raw.length - this.symbol.length);
+            return this.multiply(new BN(value, 10));
+        } else {
+            return new BN(raw, 10) as Balance;
+        }
+    }
+
     public multiply(n: number | BN | Balance): Balance {
         const value: Balance = (n instanceof Number ? new BN(n) : n) as Balance;
         return this.unit.mul(value) as Balance;

@@ -47,6 +47,10 @@ Provide a list of accounts to monitor, URIs like `//Alice` are also supported.
 *[TODO]*: option for listing only finalized/non-finalized blocks
 
 
+**`rpc-transfer`: transfer funds between accounts**\
+Can be used for depositing/withdrawing EVM account.
+
+
 **`rpc-contracts`: uploading, instantiating and calling smart contracts**\
 *[WORK IN PROGRESS]*
 
