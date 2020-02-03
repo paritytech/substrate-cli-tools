@@ -48,11 +48,15 @@ Provide a list of accounts to monitor, URIs like `//Alice` are also supported.
 
 
 **`rpc-transfer`: transfer funds between accounts**\
-Can be used for depositing/withdrawing EVM account.
+Example: `rpc-transfer //Alice 1DEV //Bob`
 
 
 **`rpc-contracts`: uploading, instantiating and calling smart contracts**\
 *[WORK IN PROGRESS]*
+
+
+**`rpc-evm`: creating/calling contracts and depositing/withdrawing EVM accounts**\
+*[WORK IN PROGRESS]* 
 
 # Uninstallation
 

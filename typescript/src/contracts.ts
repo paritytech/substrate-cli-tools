@@ -31,7 +31,7 @@ async function main() {
                 const gas = args.gas as number;
                 console.log(`Deploying code from file ${args.file} with ${gas} of gas`);
 
-                const signer = getSigner(keyring, args);
+                const signer = getSigner(keyring, args.seed as string);
                 const hash = await putCode(api, signer, args.file, gas);
                 console.log(`Code deployed with hash ${hash}`);
 
@@ -51,7 +51,7 @@ async function main() {
 
                 console.log(`Instantiating contract with hash ${codeHash}, ${token.display(endowment)} as an endowment and ${gas} of gas`);
 
-                const signer = getSigner(keyring, args);
+                const signer = getSigner(keyring, args.seed as string);
                 const address = await instantiate(api, signer, codeHash, data, endowment, gas);
                 console.log(`Contract instantiated with address ${address}`);
 

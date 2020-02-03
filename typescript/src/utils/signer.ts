@@ -5,12 +5,9 @@ import { EventRecord } from "@polkadot/types/interfaces";
 import { u8aToHex } from "@polkadot/util";
 import { constructLabel } from "./accounts";
 
-import { Arguments } from "yargs";
-
-export function getSigner(keyring: Keyring, args: Arguments): KeyringPair {
-    const id = args.seed as string;
-    const signer = keyring.addFromUri(id);
-    console.log(`Signing transaction with "${constructLabel(id)}":
+export function getSigner(keyring: Keyring, seed: string): KeyringPair {
+    const signer = keyring.addFromUri(seed);
+    console.log(`Signing transaction with "${constructLabel(seed)}":
         address: ${signer.address}
         public key: ${u8aToHex(signer.publicKey)}`);
 
