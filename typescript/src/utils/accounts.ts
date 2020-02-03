@@ -21,7 +21,7 @@ export function computeEvmId(keyring: Keyring, address: string): string {
     const bytes = keyring.decodeAddress(address);
     const hex = blake2AsHex(bytes, 256);
     console.assert(hex.length === 66); // 0x + 32 bytes
-    return hex.substring(2 + 24); // skipping 12 bytes
+    return "0x" + hex.substring(2 + 24); // skipping 12 bytes
 }
 
 function shorten(long: string): string {

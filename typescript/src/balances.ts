@@ -28,7 +28,7 @@ async function main() {
 
             if (evm) {
                 address = computeEvmId(keyring, address);
-                console.log(`${label}'s EVM address is 0x${address}`);
+                console.log(`${label}'s EVM address is ${address}`);
             }
 
             return [label, address];
@@ -44,10 +44,6 @@ async function main() {
                 // @ts-ignore
                 const balances = evmAccounts.map((evmAccount: Account) => evmAccount.balance);
                 handleBalancesChange(labels, token, previousBalances, balances);
-
-                evmAccounts.forEach((evmAccount) => {
-                    console.log("[debug]", JSON.stringify(evmAccount, null, 2));
-                });
             });
     } else {
         await api.query.balances.freeBalance.multi(addresses,

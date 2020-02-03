@@ -1,6 +1,6 @@
 YARN_BIN="$HOME/.yarn/bin"
 LINK_DIR="$HOME/.config/yarn/link/substrate-cli-tools/dist"
-TOOLS="info balances events blocks transfers contracts"
+TOOLS="info balances events blocks transfer contracts"
 
 yarn unlink &> /dev/null
 
