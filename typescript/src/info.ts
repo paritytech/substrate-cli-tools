@@ -10,7 +10,6 @@ async function main() {
         types: CUSTOM_TYPES,
     });
 
-    const epochDuration = api.consts.babe.epochDuration;
     const creationFee = api.consts.balances.creationFee;
     const existentialDeposit = api.consts.balances.existentialDeposit;
 
@@ -31,7 +30,12 @@ async function main() {
     console.log("Name: ", name.toString());
     console.log("Version: ", version.toString());
     console.log("Chain name: ", chain.toString());
-    console.log("Epoch duration: ", epochDuration.toNumber());
+
+    if (api.consts.babe) {
+        const epochDuration = api.consts.babe.epochDuration;
+        console.log("Epoch duration: ", epochDuration.toNumber());
+    }
+
     console.log("Creation fee: ", creationFee.toNumber());
     console.log("Existential deposit: ", existentialDeposit.toNumber());
     console.log("Health: ", health.toString());
