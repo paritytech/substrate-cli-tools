@@ -1,15 +1,17 @@
+#!/bin/bash
+
 YARN_BIN="$HOME/.yarn/bin"
 LINK_DIR="$HOME/.config/yarn/link/substrate-cli-tools/dist"
 TOOLS="info events blocks balances transfer contracts evm"
 
-yarn unlink &> /dev/null
+yarn unlink --silent
 
 for tool in $TOOLS
 do
     chmod +x dist/$tool.js
 done
 
-yarn link &> /dev/null
+yarn link --silent
 
 for tool in $TOOLS
 do
