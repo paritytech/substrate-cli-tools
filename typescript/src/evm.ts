@@ -2,11 +2,12 @@
 
 import { ApiPromise, Keyring } from "@polkadot/api";
 import { Balance } from "@polkadot/types/interfaces/runtime";
-import { computeEvmId, constructLabel, unfoldId } from "./utils/accounts";
+import { constructLabel } from "./utils/accounts";
 import { getWsProvider } from "./utils/connection";
 import { getSigner, sendAndReturnFinalized } from "./utils/signer";
 import TokenUnit from "./utils/token";
 
+import fs from "fs";
 import yargs = require("yargs");
 import { Arguments, Argv } from "yargs";
 
@@ -23,11 +24,40 @@ async function main() {
 
     yargs
         .option("seed", { alias: "s", global: true, default: "//Alice" })
-        .option("gas", { alias: "g", type: "number" })
         .command("create", "Upload a contract from a file",
             (args: Argv) => {
-                return args.option("file", { alias: "f", type: "string" });
+                return args
+                    .option("code", { alias: "c", type: "string" })
+                    .option("file", { alias: "f", type: "string" })
+                    .option("gas", { alias: "g", type: "number" })
+                    .option("price", { alias: "p", type: "string" })
+                    .option("endowment", { alias: "e", type: "string" });
             }, async (args) => {
+                const gas = args.gas as number;
+                const price = token.parseBalance(args.price);
+                const endowment = token.parseBalance(args.endowment);
+                console.log(`Creating contract with `
+                + `gas price of ${token.display(price)}, `
+                + `${token.display(endowment)} as an endowment and `
+                + `${gas} of gas`);
+
+                let code = args.code;
+                if (!code) {
+                    if (!args.file) {
+                        console.log("Provide either code with -c option or path to file with -f");
+                        process.exit(-1);
+                    }
+                    console.log(`Reading code from file ${args.file}`);
+                    code = extractCode(args.file);
+                } else {
+                    if (args.file) {
+                        console.log("Code is provided with -c option, ignoring provided file");
+                    }
+                }
+                console.log(`Code to deploy is ${code}`);
+
+                const signer = getSigner(keyring, args.seed as string);
+                await sendAndReturnFinalized(signer, api.tx.evm.create(code, endowment, gas, price));
 
                 process.exit(0);
             })
@@ -61,6 +91,17 @@ async function main() {
             })
         .demandCommand()
         .argv;
+}
+
+function extractCode(file: string): string {
+    const content = fs.readFileSync(file, "utf8");
+    const json = JSON.parse(content);
+
+    if (json) {
+        return json.object;
+    } else {
+        return content.toString();
+    }
 }
 
 main().catch((error) => {

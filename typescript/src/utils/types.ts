@@ -1,3 +1,5 @@
+// todo: just import  api/packages/types/src/interfaces/evm/definitions.ts
+
 export const CUSTOM_TYPES = {
     Account: {
         nonce: "U256",
