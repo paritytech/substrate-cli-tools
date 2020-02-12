@@ -14,8 +14,6 @@ Link binaries into yarn folder:
 cd typescript
 yarn install
 yarn run tsc
-chmod +x dist/info.js dist/events.js dist/blocks.js dist/contracts.js
-yarn link
 ./bind.sh
 ```
 

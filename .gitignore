@@ -1,3 +1,5 @@
 typescript/dist
 typescript/node_modules
+**/*.wat
+**/*.obj
 **/.idea
