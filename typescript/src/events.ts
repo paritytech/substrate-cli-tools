@@ -13,15 +13,27 @@ async function main() {
     });
     await api.isReady;
 
-    const filters = process.argv.slice(2);
-    const displayAll = filters.length === 0;
+    const args = process.argv.slice(2);
+    const display = args.filter((s) => s.startsWith("+")).map((s) => s.substr(1));
+    const ignore = args.filter((s) => s.startsWith("-")).map((s) => s.substr(1));
+
+    if (display.length > 0 && ignore.length > 0) {
+        console.error("Using positive and negative filters at the same time makes no sense");
+        process.exit(-1);
+    }
+
+    if (display.length + ignore.length < args.length) {
+        console.error("Ambiguous filter encountered, you must specify explicitly how to use it (+ or -)");
+        process.exit(-1);
+    }
 
     api.query.system.events((events: Vec<EventRecord>) => {
         let matchedEvents = 0;
         events.forEach((record) => {
             const { event, phase } = record;
+            const module = event.section;
 
-            if (displayAll || filters.includes(event.section)) {
+            if (!ignore.includes(module) || display.includes(module)) {
                 console.log(`${event.section}:${event.method}:: (phase=${phase.toString()})`);
                 console.log(`\t${event.meta.documentation.toString()}`);
 
