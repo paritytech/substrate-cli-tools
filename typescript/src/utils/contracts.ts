@@ -7,7 +7,7 @@ import { sendAndReturnFinalized } from "./signer";
 import BN from "bn.js";
 import fs from "fs";
 
-const blake = require('blakejs');
+const blake = require("blakejs");
 
 function reportFailure(operation: string, result: SubmittableResult) {
   const failure = result.findRecord("system", "ExtrinsicFailed");
@@ -17,7 +17,7 @@ function reportFailure(operation: string, result: SubmittableResult) {
   throw new Error(`${operation} failed.`);
 }
 
-export async function putCode(
+export async function upload(
   api: ApiPromise,
   signer: KeyringPair,
   filePath: string,
@@ -60,44 +60,4 @@ export async function instantiate(
   }
   // Return the address of instantiated contract.
   return record.event.data[1];
-}
-
-export async function callContract(
-  api: ApiPromise,
-  signer: KeyringPair,
-  contractAddress: Address,
-  inputData: any,
-  gas: number,
-  endowment: number = 0,
-): Promise<void> {
-  const tx = api.tx.contracts.call(
-    contractAddress,
-    endowment,
-    gas,
-    inputData,
-  );
-
-  await sendAndReturnFinalized(signer, tx);
-}
-
-export async function getContractStorage(
-  api: ApiPromise,
-  contractAddress: Address,
-  storageKey: Uint8Array,
-): Promise<StorageData> {
-  const contractInfo = await api.query.contracts.contractInfoOf(
-    contractAddress,
-  );
-
-  // Return the value of the contracts storage
-  const childStorageKey = (contractInfo as Option<ContractInfo>).unwrap().asAlive.trieId;
-  const childInfo = childStorageKey.subarray(childStorageKey.byteLength - 32, childStorageKey.byteLength);
-  const storageKeyBlake2b = blake.blake2bHex(storageKey, null, 32);
-
-  return await api.rpc.state.getChildStorage(
-      u8aToHex(childStorageKey), // trieId
-      u8aToHex(childInfo), // trieId without `:child_storage:` prefix
-      1, // substrate default value `1`
-      "0x" + storageKeyBlake2b, // hashed storageKey
-  );
 }
