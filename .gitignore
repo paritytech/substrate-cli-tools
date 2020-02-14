@@ -1,5 +1,7 @@
+rust/target
 typescript/dist
 typescript/node_modules
+**/*.rs.bk
 **/*.wat
 **/*.obj
 **/.idea

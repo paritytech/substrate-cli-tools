@@ -1,0 +1,21 @@
+[package]
+name = "solang-test"
+version = "0.1.0"
+authors = ["Kirill Taran <kirill.taran@parity.io>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+url = "1.7"
+anyhow = "1.0"
+env_logger = "0.7"
+sp_core = { git = "https://github.com/paritytech/substrate/", package = "sp-core" }
+sp_runtime = { git = "https://github.com/paritytech/substrate/", package = "sp-runtime" }
+frame_system = { git = "https://github.com/paritytech/substrate/", package = "frame-system" }
+parity-scale-codec = { version = "1.1", default-features = false, features = ["derive", "full"] }
+tokio = { version = "0.1" }
+futures = { version = "0.1" }
+
+[dependencies.subxt]
+git = "https://github.com/paritytech/substrate-subxt"
+package = "substrate-subxt"
