@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 root=$(git rev-parse --show-toplevel)
 data=$root/data
 
