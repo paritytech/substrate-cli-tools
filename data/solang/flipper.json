@@ -6,6 +6,7 @@
       "bool",
       "Storage",
       "new",
+      "initvalue",
       "flip",
       "get",
       "flipper"
@@ -49,28 +50,46 @@
     ]
   },
   "contract": {
-    "name": 8,
+    "name": 9,
     "constructors": [
       {
         "name": 5,
-        "selector": 3576764294,
-        "docs": [],
-        "args": []
+        "selector": 444473080,
+        "docs": [
+          "Constructor that initializes the `bool` value to the given `init_value`."
+        ],
+        "args": [
+          {
+            "name": 6,
+            "type": {
+              "ty": 2,
+              "display_name": [
+                3
+              ]
+            }
+          }
+        ]
       }
     ],
     "messages": [
       {
-        "name": 6,
+        "name": 7,
         "selector": 2851071181,
-        "docs": [],
+        "docs": [
+          "A message that can be called on instantiated contracts.",
+          "This one flips the value of the stored `bool` from `true`",
+          "to `false` and vice versa."
+        ],
         "mutates": true,
         "args": [],
         "return_type": null
       },
       {
-        "name": 7,
+        "name": 8,
         "selector": 1021725805,
-        "docs": [],
+        "docs": [
+          "Simply returns the current value of our `bool`."
+        ],
         "mutates": false,
         "args": [],
         "return_type": {
