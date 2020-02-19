@@ -24,7 +24,6 @@ export async function upload(
   gas: number,
 ): Promise<Hash> {
   const wasmCode = fs
-    // .readFileSync(path.join(__dirname, fileName))
     .readFileSync(filePath)
     .toString("hex");
   const tx = api.tx.contracts.putCode(gas, `0x${wasmCode}`);

@@ -54,6 +54,10 @@ async function main() {
                         console.log("Code is provided with -c option, ignoring provided file");
                     }
                 }
+                if (!code.startsWith("0x")) {
+                    code = `0x${code}`;
+                }
+
                 console.log(`Code to deploy is ${code}`);
 
                 const signer = getSigner(keyring, args.seed as string);

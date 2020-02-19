@@ -1,5 +1,5 @@
 [package]
-name = "solang-test"
+name = "substrate-cli-tools"
 version = "0.1.0"
 authors = ["Kirill Taran <kirill.taran@parity.io>"]
 edition = "2018"
