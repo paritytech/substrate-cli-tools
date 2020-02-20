@@ -1,11 +1,11 @@
 contract flipper {
 	bool private value;
 
-	constructor() public {
+	constructor() public payable {
 		value = false;
 	}
 
-	function flip() public {
+	function flip() public payable {
 		value = !value;
 	}
 
