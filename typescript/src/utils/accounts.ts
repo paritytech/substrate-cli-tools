@@ -1,4 +1,4 @@
-import { Keyring } from "@polkadot/keyring";
+import { Keyring } from "@polkadot/api";
 import { blake2AsHex } from "@polkadot/util-crypto";
 
 export function constructLabel(id: string): string {

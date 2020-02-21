@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
 import { ApiPromise, Keyring } from "@polkadot/api";
-import { KeyringPair } from "@polkadot/keyring/types";
-import { H256, Option } from "@polkadot/types";
-import { ContractInfo, Hash } from "@polkadot/types/interfaces";
+import { Option } from "@polkadot/types";
+import { ContractInfo } from "@polkadot/types/interfaces";
 import { u8aToHex } from "@polkadot/util";
 import { getWsProvider } from "./utils/connection";
-import {getSigner, sendAndReturnFinalized} from "./utils/signer";
+import {getSigner, sendAndReturnCollated} from "./utils/signer";
 import TokenUnit from "./utils/token";
 
 import blake = require("blakejs");
@@ -45,7 +44,7 @@ async function main() {
                     .toString("hex");
                 const tx = api.tx.contracts.putCode(gas, `0x${wasm}`);
 
-                const result: any = await sendAndReturnFinalized(signer, tx);
+                const result: any = await sendAndReturnCollated(signer, tx);
                 const record = result.findRecord("contracts", "CodeStored");
 
                 if (!record) {
@@ -65,20 +64,19 @@ async function main() {
                     .option("endowment", { alias: "e", type: "string" })
                     .option("data", { alias: "d", type: "string" });
             }, async (args) => {
-                const codeHash = new H256(api.registry, args.hash);
                 const gas = args.gas as number;
                 const endowment = token.parseBalance(args.endowment);
 
                 console.log(`Instantiating contract`);
-                console.log(`\tcode hash: ${codeHash}`);
+                console.log(`\tcode hash: ${args.hash}`);
                 console.log("\tendowment:", token.display(endowment));
                 console.log("\tgas:", gas);
 
                 const signer = getSigner(keyring, args.seed as string);
 
-                const tx = api.tx.contracts.instantiate(endowment, gas, codeHash, args.data);
+                const tx = api.tx.contracts.instantiate(endowment, gas, args.hash, args.data);
 
-                const result: any = await sendAndReturnFinalized(signer, tx);
+                const result: any = await sendAndReturnCollated(signer, tx);
                 const record = result.findRecord("contracts", "Instantiated");
 
                 if (!record) {
@@ -108,8 +106,8 @@ async function main() {
                 console.log("\tgas:", gas);
 
                 const signer = getSigner(keyring, args.seed as string);
-                const tx = api.tx.contracts.call(args.address, endowment, gas, args.data);
-                await sendAndReturnFinalized(signer, tx);
+                const tx = api.tx.contracts.call(args.address as string, endowment, gas, args.data as string);
+                await sendAndReturnCollated(signer, tx);
                 console.log("Call performed");
 
                 process.exit(0);

@@ -4,7 +4,7 @@ import { ApiPromise, Keyring } from "@polkadot/api";
 import { Balance } from "@polkadot/types/interfaces/runtime";
 import { constructLabel, unfoldId } from "./utils/accounts";
 import { getWsProvider } from "./utils/connection";
-import { getSigner, sendAndReturnFinalized } from "./utils/signer";
+import { getSigner, sendAndReturnCollated } from "./utils/signer";
 import TokenUnit from "./utils/token";
 
 import { CUSTOM_TYPES } from "./utils/types";
@@ -30,7 +30,7 @@ async function main() {
     const value: Balance = token.parseBalance(amount);
     console.log(`Transferring ${token.display(value)} from ${from} to ${to}`);
 
-    await sendAndReturnFinalized(signer,
+    await sendAndReturnCollated(signer,
         api.tx.balances.transfer(
             unfoldId(keyring, target),
             value));

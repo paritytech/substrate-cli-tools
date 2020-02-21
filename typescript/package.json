@@ -2,19 +2,13 @@
   "name": "substrate-cli-tools",
   "author": "Kirill Taran",
   "dependencies": {
-    "@polkadot/api": "^1.0.0-beta.8",
-    "@polkadot/keyring": "^2.0.0-beta.4",
+    "@polkadot/api": "beta",
     "ts-node": "^8.5.4",
+    "typescript": "^3.8.2",
     "yargs": "^15.1.0"
   },
-  "scripts": {
-    "rpc-info": "ts-node ./src/info.ts",
-    "rpc-events": "ts-node ./src/events.ts",
-    "rpc-blocks": "ts-node ./src/blocks.ts",
-    "rpc-contracts": "ts-node ./src/contracts.ts"
-  },
   "devDependencies": {
-    "@polkadot/dev": "^0.32.13",
+    "@polkadot/dev": "beta",
     "@types/yargs": "^15.0.0",
     "tslint": "^5.20.1"
   },

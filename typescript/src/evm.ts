@@ -2,9 +2,10 @@
 
 import { ApiPromise, Keyring } from "@polkadot/api";
 import { Balance } from "@polkadot/types/interfaces/runtime";
+
 import { constructLabel } from "./utils/accounts";
 import { getWsProvider } from "./utils/connection";
-import { getSigner, sendAndReturnFinalized } from "./utils/signer";
+import { getSigner, sendAndReturnCollated } from "./utils/signer";
 import TokenUnit from "./utils/token";
 
 import fs from "fs";
@@ -61,7 +62,7 @@ async function main() {
                 console.log(`Code to deploy is ${code}`);
 
                 const signer = getSigner(keyring, args.seed as string);
-                await sendAndReturnFinalized(signer, api.tx.evm.create(code, endowment, gas, price));
+                await sendAndReturnCollated(signer, api.tx.evm.create(code, endowment, gas, price, null));
 
                 process.exit(0);
             })
@@ -73,9 +74,7 @@ async function main() {
                 console.log(`Depositing ${token.display(value)} to ${constructLabel(args.seed as string)}`);
 
                 const signer = getSigner(keyring, args.seed as string);
-
-                await sendAndReturnFinalized(signer,
-                    api.tx.evm.depositBalance(value));
+                await sendAndReturnCollated(signer, api.tx.evm.depositBalance(value));
 
                 process.exit(0);
             })
@@ -87,9 +86,7 @@ async function main() {
                 console.log(`Withdrawing ${token.display(value)} from ${constructLabel(args.seed as string)}`);
 
                 const signer = getSigner(keyring, args.seed as string);
-
-                await sendAndReturnFinalized(signer,
-                    api.tx.evm.withdrawBalance(value));
+                await sendAndReturnCollated(signer, api.tx.evm.withdrawBalance(value));
 
                 process.exit(0);
             })
@@ -108,7 +105,4 @@ function extractCode(file: string): string {
     }
 }
 
-main().catch((error) => {
-    console.error(error);
-    process.exit(-1);
-});
+main();

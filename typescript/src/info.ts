@@ -36,13 +36,14 @@ async function main() {
         console.log("Epoch duration: ", epochDuration.toNumber());
     }
 
-    console.log("Creation fee: ", creationFee.toNumber());
-    console.log("Existential deposit: ", existentialDeposit.toNumber());
     console.log("Health: ", health.toString());
     console.log("Peers: ", peers.toString());
     console.log("Network state: ", network.toString());
     console.log("Properties: ", props.toString());
     console.log("Last timestamp: ", now.toNumber());
+
+    console.log("Existential deposit: ", existentialDeposit.toNumber());
+    console.log("Creation fee: ", creationFee);
 }
 
 main()
