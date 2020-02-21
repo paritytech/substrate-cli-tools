@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 
 import { ApiPromise, Keyring } from "@polkadot/api";
+import { KeyringPair } from "@polkadot/keyring/types";
 import { H256, Option } from "@polkadot/types";
-import { ContractInfo } from "@polkadot/types/interfaces";
+import { ContractInfo, Hash } from "@polkadot/types/interfaces";
 import { u8aToHex } from "@polkadot/util";
 import { getWsProvider } from "./utils/connection";
-import { instantiate, upload } from "./utils/contracts";
 import {getSigner, sendAndReturnFinalized} from "./utils/signer";
 import TokenUnit from "./utils/token";
+
+import blake = require("blakejs");
 
 import yargs = require("yargs");
 import { Arguments, Argv } from "yargs";
 
 import { CUSTOM_TYPES } from "./utils/types";
+import fs from "fs";
 
 async function main() {
     const api = await ApiPromise.create({
@@ -30,13 +33,27 @@ async function main() {
             (args: Argv) => {
                 return args.option("file", { alias: "f", type: "string" });
             }, async (args) => {
+                const signer = getSigner(keyring, args.seed as string);
+
                 const gas = args.gas as number;
                 console.log("Deploying code");
                 console.log("\tsource:", args.file);
                 console.log("\tgas:", gas);
 
-                const signer = getSigner(keyring, args.seed as string);
-                const hash = await upload(api, signer, args.file, gas);
+                const wasm = fs
+                    .readFileSync(args.file)
+                    .toString("hex");
+                const tx = api.tx.contracts.putCode(gas, `0x${wasm}`);
+
+                const result: any = await sendAndReturnFinalized(signer, tx);
+                const record = result.findRecord("contracts", "CodeStored");
+
+                if (!record) {
+                    const failure = result.findRecord("system", "ExtrinsicFailed");
+                    console.error("ExtrinsicFailed", JSON.stringify(failure, null, 2));
+                }
+
+                const hash = record.event.data[0];
                 console.log(`Code deployed with hash ${hash}`);
 
                 process.exit(0);
@@ -58,7 +75,18 @@ async function main() {
                 console.log("\tgas:", gas);
 
                 const signer = getSigner(keyring, args.seed as string);
-                const address = await instantiate(api, signer, codeHash, args.data, endowment, gas);
+
+                const tx = api.tx.contracts.instantiate(endowment, gas, codeHash, args.data);
+
+                const result: any = await sendAndReturnFinalized(signer, tx);
+                const record = result.findRecord("contracts", "Instantiated");
+
+                if (!record) {
+                    const failure = result.findRecord("system", "ExtrinsicFailed");
+                    console.error("ExtrinsicFailed", JSON.stringify(failure, null, 2));
+                }
+
+                const address = record.event.data[1];
                 console.log(`Contract instantiated with address ${address}`);
 
                 process.exit(0);

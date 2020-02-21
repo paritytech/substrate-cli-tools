@@ -25,7 +25,6 @@ export async function sendAndReturnFinalized(signer: KeyringPair, tx: any) {
             if (result.status.isDropped ||
                 result.status.isInvalid ||
                 result.status.isUsurped) {
-                console.error("!!! ACHTUNG !!!");
                 reject(result as SubmittableResult);
                 throw new Error("Transaction could not be finalized.");
             }
