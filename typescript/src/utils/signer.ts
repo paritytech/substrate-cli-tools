@@ -13,7 +13,7 @@ export function getSigner(keyring: Keyring, seed: string): KeyringPair {
     return signer;
 }
 
-export async function sendAndReturnCollated(signer: KeyringPair, tx: any) {
+export async function sendAndReturnCollated(signer: KeyringPair, tx: any): Promise<SubmittableResult> {
     return new Promise((resolve, reject) => {
         tx.signAndSend(signer, (result: SubmittableResult) => {
             if (result.status.isInBlock || result.status.isFinalized) {

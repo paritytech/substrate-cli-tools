@@ -62,7 +62,40 @@ async function main() {
                 console.log(`Code to deploy is ${code}`);
 
                 const signer = getSigner(keyring, args.seed as string);
-                await sendAndReturnCollated(signer, api.tx.evm.create(code, endowment, gas, price, null));
+                const result = await sendAndReturnCollated(signer, api.tx.evm.create(code, endowment, gas, price, null));
+                const created = result.findRecord("evm", "Created");
+
+                if (!created) {
+                    const failure = result.findRecord("system", "ExtrinsicFailed");
+                    console.error("ExtrinsicFailed", JSON.stringify(failure, null, 2));
+                }
+
+                const address = created.event.data[0];
+                console.log(`Contract instantiated with address ${address}`);
+                process.exit(0);
+            })
+        .command("call", "Call some method of the contract",
+            (args: Argv) => {
+                return args
+                    .option("address", {alias: "a", type: "string"})
+                    .option("gas", {alias: "g", type: "number"})
+                    .option("price", {alias: "p", type: "string"})
+                    .option("endowment", {alias: "e", type: "string"})
+                    .option("data", { alias: "d", type: "string" });
+            }, async (args: Arguments) => {
+                const gas = args.gas as number;
+                const price = token.parseBalance(args.price as string);
+                const endowment = token.parseBalance(args.endowment as string);
+                console.log(`Calling contract`);
+                console.log(`\taddress: ${args.address}`);
+                console.log(`\tdata: ${args.data}`);
+                console.log("\tendowment:", token.display(endowment));
+                console.log("\tgas price:", token.display(price));
+                console.log("\tgas limit:", gas);
+
+                const signer = getSigner(keyring, args.seed as string);
+                const tx = api.tx.evm.call(args.address as string, args.data as string, endowment, gas, price, null);
+                await sendAndReturnCollated(signer, tx);
 
                 process.exit(0);
             })

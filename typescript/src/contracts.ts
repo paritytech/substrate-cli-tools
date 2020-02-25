@@ -77,14 +77,14 @@ async function main() {
                 const tx = api.tx.contracts.instantiate(endowment, gas, args.hash, args.data);
 
                 const result: any = await sendAndReturnCollated(signer, tx);
-                const record = result.findRecord("contracts", "Instantiated");
+                const instantiated = result.findRecord("contracts", "Instantiated");
 
-                if (!record) {
+                if (!instantiated) {
                     const failure = result.findRecord("system", "ExtrinsicFailed");
                     console.error("ExtrinsicFailed", JSON.stringify(failure, null, 2));
                 }
 
-                const address = record.event.data[1];
+                const address = instantiated.event.data[1];
                 console.log(`Contract instantiated with address ${address}`);
 
                 process.exit(0);
