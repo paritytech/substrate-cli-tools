@@ -2,6 +2,7 @@
 
 import { ApiPromise, Keyring } from "@polkadot/api";
 import { Balance } from "@polkadot/types/interfaces/runtime";
+import { keccakAsHex } from '@polkadot/util-crypto';
 
 import { constructLabel } from "./utils/accounts";
 import { getWsProvider } from "./utils/connection";
@@ -15,14 +16,6 @@ import { Arguments, Argv } from "yargs";
 import { CUSTOM_TYPES } from "./utils/types";
 
 async function main() {
-    const api = await ApiPromise.create({
-        provider: getWsProvider(),
-        types: CUSTOM_TYPES,
-    });
-
-    const token = await TokenUnit.provide(api);
-    const keyring = new Keyring({ type: "sr25519" });
-
     yargs
         .option("seed", { alias: "s", global: true, default: "//Alice" })
         .command("create", "Upload a contract from a file",
@@ -34,6 +27,8 @@ async function main() {
                     .option("price", { alias: "p", type: "string" })
                     .option("endowment", { alias: "e", type: "string" });
             }, async (args) => {
+                const [api, token, keyring] = await initialize();
+
                 const gas = args.gas as number;
                 const price = token.parseBalance(args.price);
                 const endowment = token.parseBalance(args.endowment);
@@ -83,6 +78,8 @@ async function main() {
                     .option("endowment", {alias: "e", type: "string"})
                     .option("data", { alias: "d", type: "string" });
             }, async (args: Arguments) => {
+                const [api, token, keyring] = await initialize();
+
                 const gas = args.gas as number;
                 const price = token.parseBalance(args.price as string);
                 const endowment = token.parseBalance(args.endowment as string);
@@ -103,6 +100,8 @@ async function main() {
             (args: Argv) => {
                 return args.option("amount", { alias: "a", type: "string" });
             }, async (args) => {
+                const [api, token, keyring] = await initialize();
+
                 const value: Balance = token.parseBalance(args.amount as string);
                 console.log(`Depositing ${token.display(value)} to ${constructLabel(args.seed as string)}`);
 
@@ -115,6 +114,8 @@ async function main() {
             (args: Argv) => {
                 return args.option("amount", { alias: "a", type: "string" });
             }, async (args) => {
+                const [api, token, keyring] = await initialize();
+
                 const value: Balance = token.parseBalance(args.amount as string);
                 console.log(`Withdrawing ${token.display(value)} from ${constructLabel(args.seed as string)}`);
 
@@ -123,8 +124,33 @@ async function main() {
 
                 process.exit(0);
             })
+        .command("selector", "Get an encoded function signature for some method",
+            (args) => args, (args) => {
+                const raw = args._.slice(1);
+                const arg = raw[raw.length - 1];
+                if (arg === undefined) {
+                    console.error("Provide a function signature to encode");
+                    process.exit(-1);
+                }
+
+                const selector = keccakAsHex(arg).substr(0, 10);
+                console.log(`Selector for such a signature is ${selector}`);
+                process.exit(0);
+            })
         .demandCommand()
         .argv;
+}
+
+async function initialize(): Promise<[ApiPromise, TokenUnit, Keyring]> {
+    const api = await ApiPromise.create({
+        provider: getWsProvider(),
+        types: CUSTOM_TYPES,
+    });
+
+    const token = await TokenUnit.provide(api);
+    const keyring = new Keyring({ type: "sr25519" });
+
+    return [api, token, keyring];
 }
 
 function extractCode(file: string): string {
