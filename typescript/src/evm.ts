@@ -2,7 +2,7 @@
 
 import { ApiPromise, Keyring } from "@polkadot/api";
 import { Balance } from "@polkadot/types/interfaces/runtime";
-import { keccakAsHex } from '@polkadot/util-crypto';
+import { keccakAsHex } from "@polkadot/util-crypto";
 
 import { constructLabel } from "./utils/accounts";
 import { getWsProvider } from "./utils/connection";
@@ -13,7 +13,7 @@ import fs from "fs";
 import yargs = require("yargs");
 import { Arguments, Argv } from "yargs";
 
-import { CUSTOM_TYPES } from "./utils/types";
+import { TYPES } from "./utils/types";
 
 async function main() {
     yargs
@@ -26,25 +26,25 @@ async function main() {
                     .option("gas", { alias: "g", type: "number" })
                     .option("price", { alias: "p", type: "string" })
                     .option("endowment", { alias: "e", type: "string" });
-            }, async (args) => {
+            }, async (args: Arguments) => {
                 const [api, token, keyring] = await initialize();
 
                 const gas = args.gas as number;
-                const price = token.parseBalance(args.price);
-                const endowment = token.parseBalance(args.endowment);
+                const price = token.parseBalance(args.price as string);
+                const endowment = token.parseBalance(args.endowment as string);
                 console.log(`Creating contract with `
                 + `gas price of ${token.display(price)}, `
                 + `${token.display(endowment)} as an endowment and `
                 + `${gas} of gas`);
 
-                let code = args.code;
+                let code = args.code as string;
                 if (!code) {
                     if (!args.file) {
                         console.log("Provide either code with -c option or path to file with -f");
                         process.exit(-1);
                     }
                     console.log(`Reading code from file ${args.file}`);
-                    code = extractCode(args.file);
+                    code = extractCode(args.file as string);
                 } else {
                     if (args.file) {
                         console.log("Code is provided with -c option, ignoring provided file");
@@ -57,7 +57,8 @@ async function main() {
                 console.log(`Code to deploy is ${code}`);
 
                 const signer = getSigner(keyring, args.seed as string);
-                const result = await sendAndReturnCollated(signer, api.tx.evm.create(code, endowment, gas, price, null));
+                const result = await sendAndReturnCollated(signer,
+                    api.tx.evm.create(code, endowment, gas, price, null));
                 const created = result.findRecord("evm", "Created");
 
                 if (!created) {
@@ -96,10 +97,25 @@ async function main() {
 
                 process.exit(0);
             })
+        .command("info", "Grab some information about instantiated contract",
+            (args: Argv) => {
+                return args
+                    .option("address", { alias: "a", type: "string" })
+                    .option("index", { alias: "i", type: "string" });
+            }, async (args: Arguments) => {
+                const [api, token, keyring] = await initialize();
+
+                console.log("State:")
+                const idx = args.index as string;
+                const storage = await api.query.evm.accountStorages(args.address as string, idx);
+                console.log(`[${idx}]`, JSON.stringify(storage, null, 2));
+
+                process.exit(0);
+            })
         .command("deposit", "Deposit funds to EVM balance of the account",
             (args: Argv) => {
                 return args.option("amount", { alias: "a", type: "string" });
-            }, async (args) => {
+            }, async (args: Arguments) => {
                 const [api, token, keyring] = await initialize();
 
                 const value: Balance = token.parseBalance(args.amount as string);
@@ -113,7 +129,7 @@ async function main() {
         .command("withdraw", "Withdraw funds from EVM balance of the account",
             (args: Argv) => {
                 return args.option("amount", { alias: "a", type: "string" });
-            }, async (args) => {
+            }, async (args: Arguments) => {
                 const [api, token, keyring] = await initialize();
 
                 const value: Balance = token.parseBalance(args.amount as string);
@@ -125,7 +141,7 @@ async function main() {
                 process.exit(0);
             })
         .command("selector", "Get an encoded function signature for some method",
-            (args) => args, (args) => {
+            (args: Argv) => args, (args) => {
                 const raw = args._.slice(1);
                 const arg = raw[raw.length - 1];
                 if (arg === undefined) {
@@ -134,7 +150,7 @@ async function main() {
                 }
 
                 const selector = keccakAsHex(arg).substr(0, 10);
-                console.log(`Selector for such a signature is ${selector}`);
+                console.log(selector);
                 process.exit(0);
             })
         .demandCommand()
@@ -142,10 +158,10 @@ async function main() {
 }
 
 async function initialize(): Promise<[ApiPromise, TokenUnit, Keyring]> {
-    const api = await ApiPromise.create({
-        provider: getWsProvider(),
-        types: CUSTOM_TYPES,
-    });
+    const api = await ApiPromise.create(Object.assign(
+        { provider: getWsProvider() },
+        TYPES
+    ));
 
     const token = await TokenUnit.provide(api);
     const keyring = new Keyring({ type: "sr25519" });

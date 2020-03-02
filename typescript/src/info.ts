@@ -2,13 +2,13 @@
 
 import { ApiPromise } from "@polkadot/api";
 import { getWsProvider } from "./utils/connection";
-import { CUSTOM_TYPES } from "./utils/types";
+import { TYPES } from "./utils/types";
 
 async function main() {
-    const api = await ApiPromise.create({
-        provider: getWsProvider(),
-        types: CUSTOM_TYPES,
-    });
+    const api = await ApiPromise.create(Object.assign(
+        { provider: getWsProvider() },
+        TYPES
+    ));
 
     const creationFee = api.consts.balances.creationFee;
     const existentialDeposit = api.consts.balances.existentialDeposit;

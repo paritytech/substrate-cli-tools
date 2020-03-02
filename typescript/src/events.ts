@@ -4,12 +4,12 @@ import { ApiPromise } from "@polkadot/api";
 import { Vec } from "@polkadot/types";
 import { EventRecord } from "@polkadot/types/interfaces";
 import { getWsProvider } from "./utils/connection";
-import { CUSTOM_TYPES } from "./utils/types";
+import { TYPES } from "./utils/types";
 
 async function main() {
     const api = new ApiPromise({
         provider: getWsProvider(),
-        types: CUSTOM_TYPES,
+        typesChain: TYPES,
     });
     await api.isReady;
 

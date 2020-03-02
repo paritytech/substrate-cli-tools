@@ -5,22 +5,21 @@ import { Option } from "@polkadot/types";
 import { ContractInfo } from "@polkadot/types/interfaces";
 import { u8aToHex } from "@polkadot/util";
 import { getWsProvider } from "./utils/connection";
-import {getSigner, sendAndReturnCollated} from "./utils/signer";
+import { getSigner, sendAndReturnCollated } from "./utils/signer";
 import TokenUnit from "./utils/token";
+import { TYPES } from "./utils/types";
 
 import blake = require("blakejs");
+import fs from "fs";
 
 import yargs = require("yargs");
 import { Arguments, Argv } from "yargs";
 
-import { CUSTOM_TYPES } from "./utils/types";
-import fs from "fs";
-
 async function main() {
-    const api = await ApiPromise.create({
-        provider: getWsProvider(),
-        types: CUSTOM_TYPES,
-    });
+    const api = await ApiPromise.create(Object.assign(
+        { provider: getWsProvider() },
+        TYPES
+    ));
 
     const token = await TokenUnit.provide(api);
     const keyring = new Keyring({ type: "sr25519" });
@@ -31,7 +30,7 @@ async function main() {
         .command("deploy", "Upload a contract from a file",
             (args: Argv) => {
                 return args.option("file", { alias: "f", type: "string" });
-            }, async (args) => {
+            }, async (args: Arguments) => {
                 const signer = getSigner(keyring, args.seed as string);
 
                 const gas = args.gas as number;
@@ -40,7 +39,7 @@ async function main() {
                 console.log("\tgas:", gas);
 
                 const wasm = fs
-                    .readFileSync(args.file)
+                    .readFileSync(args.file as string)
                     .toString("hex");
                 const tx = api.tx.contracts.putCode(gas, `0x${wasm}`);
 
@@ -63,9 +62,9 @@ async function main() {
                     .option("hash", { alias: "h", type: "string" })
                     .option("endowment", { alias: "e", type: "string" })
                     .option("data", { alias: "d", type: "string" });
-            }, async (args) => {
+            }, async (args: Arguments) => {
                 const gas = args.gas as number;
-                const endowment = token.parseBalance(args.endowment);
+                const endowment = token.parseBalance(args.endowment as string);
 
                 console.log(`Instantiating contract`);
                 console.log(`\tcode hash: ${args.hash}`);
@@ -74,7 +73,7 @@ async function main() {
 
                 const signer = getSigner(keyring, args.seed as string);
 
-                const tx = api.tx.contracts.instantiate(endowment, gas, args.hash, args.data);
+                const tx = api.tx.contracts.instantiate(endowment, gas, args.hash as string, args.data as string);
 
                 const result: any = await sendAndReturnCollated(signer, tx);
                 const instantiated = result.findRecord("contracts", "Instantiated");
@@ -115,10 +114,10 @@ async function main() {
         .command("info", "Grab some information about instantiated contract",
             (args: Argv) => {
                 return args.option("address", { alias: "a", type: "string" });
-            }, async (args) => {
+            }, async (args: Arguments) => {
                 console.log(`Reguesting contract's info`);
                 console.log(`\taddress: ${args.address}`);
-                const info = await api.query.contracts.contractInfoOf(args.address);
+                const info = await api.query.contracts.contractInfoOf(args.address as string);
                 console.log("Info:", JSON.stringify(info, null, 2));
 
                 const trieId = (info as Option<ContractInfo>).unwrap().asAlive.trieId;

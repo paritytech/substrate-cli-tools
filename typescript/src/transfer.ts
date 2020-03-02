@@ -7,32 +7,35 @@ import { getWsProvider } from "./utils/connection";
 import { getSigner, sendAndReturnCollated } from "./utils/signer";
 import TokenUnit from "./utils/token";
 
-import { CUSTOM_TYPES } from "./utils/types";
+import { TYPES } from "./utils/types";
+
+import yargs = require("yargs");
 
 async function main() {
-    const args = process.argv.slice(2);
-    const seed = args[0];
-    const amount = args[1];
-    const target = args[2];
+    const args = yargs
+        .option("seed", { alias: "s", global: true, type: "string", default: "//Alice" })
+        .option("target", { alias: "t", global: true, type: "string" })
+        .option("amount", { alias: "a", global: true, type: "string" })
+        .argv;
 
-    const from = constructLabel(seed);
-    const to = constructLabel(target);
+    const from = constructLabel(args.seed);
+    const to = constructLabel(args.target);
 
-    const api = await ApiPromise.create({
-        provider: getWsProvider(),
-        types: CUSTOM_TYPES,
-    });
+    const api = await ApiPromise.create(Object.assign(
+        { provider: getWsProvider() },
+        TYPES
+    ));
 
     const token = await TokenUnit.provide(api);
     const keyring = new Keyring({ type: "sr25519" });
-    const signer = getSigner(keyring, seed);
+    const signer = getSigner(keyring, args.seed);
 
-    const value: Balance = token.parseBalance(amount);
+    const value: Balance = token.parseBalance(args.amount);
     console.log(`Transferring ${token.display(value)} from ${from} to ${to}`);
 
     await sendAndReturnCollated(signer,
         api.tx.balances.transfer(
-            unfoldId(keyring, target),
+            unfoldId(keyring, args.target),
             value));
     process.exit(0);
 }

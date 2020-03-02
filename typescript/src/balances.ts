@@ -6,17 +6,17 @@ import { Balance } from "@polkadot/types/interfaces/runtime";
 import { computeEvmId, constructLabel, unfoldId } from "./utils/accounts";
 import { getWsProvider } from "./utils/connection";
 import TokenUnit from "./utils/token";
-import { CUSTOM_TYPES } from "./utils/types";
+import { TYPES } from "./utils/types";
 
 async function main() {
     const args = process.argv.slice(2);
     const ids = args.filter((arg) => arg !== "--evm");
     const evm = ids.length < args.length;
 
-    const api = await ApiPromise.create({
-        provider: getWsProvider(),
-        types: CUSTOM_TYPES,
-    });
+    const api = await ApiPromise.create(Object.assign(
+        { provider: getWsProvider() },
+        TYPES
+    ));
 
     const token = await TokenUnit.provide(api);
     const keyring = new Keyring({ type: "sr25519" });

@@ -31,8 +31,9 @@ export default class TokenUnit {
         return token;
     }
 
-    public parseBalance(raw: string): Balance {
-        if (raw.endsWith(this.symbol)) {
+    public parseBalance(raw: string | number): Balance {
+        console.log("type is: ", typeof raw);
+        if (typeof raw === "string" && raw.endsWith(this.symbol)) {
             const value = raw.substring(0, raw.length - this.symbol.length);
             return this.multiply(new BN(value, 10));
         } else {

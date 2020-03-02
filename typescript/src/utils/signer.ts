@@ -1,4 +1,4 @@
-import { SubmittableResult, Keyring } from "@polkadot/api";
+import { Keyring, SubmittableResult } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
 import { EventRecord } from "@polkadot/types/interfaces";
 import { u8aToHex } from "@polkadot/util";
