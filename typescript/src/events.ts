@@ -17,6 +17,9 @@ async function main() {
     const positive = args.filter((s) => s.startsWith("+")).map((s) => s.substr(1));
     const negative = args.filter((s) => s.startsWith("-")).map((s) => s.substr(1));
 
+    const negativeFiltering = negative.length > 0;
+    const positiveFiltering = positive.length > 0;
+
     if (positive.length > 0 && negative.length > 0) {
         console.error("Using positive and negative filters at the same time makes no sense");
         process.exit(-1);
@@ -33,7 +36,8 @@ async function main() {
             const { event, phase } = record;
             const module = event.section;
 
-            if (!negative.includes(module) || positive.includes(module)) {
+            if (positiveFiltering && positive.includes(module)
+                || negativeFiltering && !negative.includes(module)) {
                 console.log(`${event.section}:${event.method}:: (phase=${phase.toString()})`);
                 console.log(`\t${event.meta.documentation.toString()}`);
 

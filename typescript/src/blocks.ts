@@ -16,8 +16,20 @@ async function main() {
     const subscribeToNew = all || process.argv.includes("--new");
     // todo: option to display finalized only
 
+    if (process.argv.length < 3 || process.argv.includes("--help")) {
+        console.info("Choose `--old` to dump historical blocks or `--new` to subscribe for new ones (or both).");
+        console.info("Choose a display mode: `--full`, `--header`. None for hashes only.");
+        console.info("Specify `--pretty` if you want to prettify jsons.");
+        process.exit(22);
+    }
+
+    if (!subscribeToNew && !includeHistorical) {
+        console.error("Choose `--old` or `--new` blocks (or both).");
+        process.exit(22);
+    }
+
     if (displayFull && displayHeader) {
-        console.error("Choose maximum one display mode.");
+        console.error("Choose maximum one display mode (`--full` or `--header`).");
         process.exit(22);
     }
 

@@ -46,8 +46,9 @@ async function main() {
                 handleBalancesChange(labels, token, previousBalances, balances);
             });
     } else {
-        await api.query.balances.freeBalance.multi(addresses,
-            (balances) => handleBalancesChange(labels, token, previousBalances, balances));
+        await api.query.system.account.multi(addresses,
+            (balances) => handleBalancesChange(labels, token, previousBalances,
+                balances.map((x: any) => x.data.free)));
     }
 }
 
