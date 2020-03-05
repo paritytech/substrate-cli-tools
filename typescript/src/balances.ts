@@ -2,6 +2,7 @@
 
 import { ApiPromise, Keyring } from "@polkadot/api";
 import { Balance } from "@polkadot/types/interfaces/runtime";
+import { U256 } from '@polkadot/types/primitive';
 
 import { computeEvmId, constructLabel, unfoldId } from "./utils/accounts";
 import { getWsProvider } from "./utils/connection";
@@ -18,7 +19,6 @@ async function main() {
         TYPES
     ));
 
-    const token = await TokenUnit.provide(api);
     const keyring = new Keyring({ type: "sr25519" });
 
     const accounts: Array<[string, string]> = ids
@@ -36,23 +36,39 @@ async function main() {
 
     const labels = accounts.map((account) => account[0]);
     const addresses = accounts.map((account) => account[1]);
-    const previousBalances = accounts.map((_) => undefined);
 
     if (evm) {
+        const previous: Array<U256 | undefined> = accounts.map((_) => undefined);
+
         await api.query.evm.accounts.multi(addresses,
             (evmAccounts) => {
                 // @ts-ignore
                 const balances = evmAccounts.map((evmAccount: Account) => evmAccount.balance);
-                handleBalancesChange(labels, token, previousBalances, balances);
+                handleBalancesChange<U256>(labels, null, previous, balances);
             });
     } else {
+        const token = await TokenUnit.provide(api);
+        const previous: Array<Balance | undefined> = accounts.map((_) => undefined);
+
         await api.query.system.account.multi(addresses,
-            (balances) => handleBalancesChange(labels, token, previousBalances,
+            (balances) => handleBalancesChange<Balance>(labels, token, previous,
                 balances.map((x: any) => x.data.free)));
     }
 }
 
-function handleBalancesChange(labels, token, prevValues, newValues) {
+function handleBalancesChange<B extends U256 | Balance>(
+        labels: Array<String>,
+        token: TokenUnit | null,
+        prevValues: Array<B | undefined>,
+        newValues: Array<B>) {
+    function display(balance: B) {
+        if (token === null) {
+            return balance.toString();
+        } else {
+            return token.display(balance);
+        }
+    }
+
     labels.forEach((label, i) => {
         const previous = prevValues[i];
 
@@ -60,11 +76,12 @@ function handleBalancesChange(labels, token, prevValues, newValues) {
             console.log();
         }
 
-        const current = newValues[i];
-        console.log(`${label}'s balance is ${token.display(current as Balance)}`);
+        const current = newValues[i] as B;
+        console.log(`${label}'s balance is ${display(current)}`);
 
         if (previous) {
-            console.log(`\tDelta: ${token.display((current as Balance).sub(previous))}`);
+            const x: B = current.sub(previous) as B;
+            console.log(`\tDelta: ${display(x)}`);
         }
         prevValues[i] = current;
     });

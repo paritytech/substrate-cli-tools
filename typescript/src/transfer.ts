@@ -19,7 +19,7 @@ async function main() {
         .argv;
 
     const from = constructLabel(args.seed);
-    const to = constructLabel(args.target);
+    const to = constructLabel(args.target as string);
 
     const api = await ApiPromise.create(Object.assign(
         { provider: getWsProvider() },
@@ -30,12 +30,12 @@ async function main() {
     const keyring = new Keyring({ type: "sr25519" });
     const signer = getSigner(keyring, args.seed);
 
-    const value: Balance = token.parseBalance(args.amount);
+    const value: Balance = token.parseBalance(args.amount as string | number);
     console.log(`Transferring ${token.display(value)} from ${from} to ${to}`);
 
     await sendAndReturnCollated(signer,
         api.tx.balances.transfer(
-            unfoldId(keyring, args.target),
+            unfoldId(keyring, args.target as string),
             value));
     process.exit(0);
 }

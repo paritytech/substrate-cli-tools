@@ -64,6 +64,7 @@ async function main() {
                 if (!created) {
                     const failure = result.findRecord("system", "ExtrinsicFailed");
                     console.error("ExtrinsicFailed", JSON.stringify(failure, null, 2));
+                    process.exit(-1);
                 }
 
                 const address = created.event.data[0];
