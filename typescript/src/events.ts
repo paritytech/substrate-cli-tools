@@ -37,7 +37,9 @@ async function main() {
             const module = event.section;
 
             if (positiveFiltering && positive.includes(module)
-                || negativeFiltering && !negative.includes(module)) {
+                || negativeFiltering && !negative.includes(module)
+                || positiveFiltering === negativeFiltering) {
+
                 console.log(`${event.section}:${event.method}:: (phase=${phase.toString()})`);
                 console.log(`\t${event.meta.documentation.toString()}`);
 
