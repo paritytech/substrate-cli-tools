@@ -6,7 +6,7 @@ data=$root/data
 
 cd $root/typescript
 
-rpc_contracts="yarn run ts-node src/contracts.ts"
+rpc_contracts="$1/contracts.$2"
 
 $rpc_contracts -f $data/solang/flipper.wasm -g 12345 deploy
 $rpc_contracts -h 0xe553a5690f471b9c110b8044a4db54510d60a30d5cc7925bf7582d177feeb748 -e 1234567DEV instantiate -g 12345 -d 0xd531178600
