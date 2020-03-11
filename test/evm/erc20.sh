@@ -4,10 +4,8 @@ set -e
 root=$(git rev-parse --show-toplevel)
 data=$root/data
 
-cd $root/typescript
-
+rpc_evm="$1/evm.$2"
 u32_max="4294967295"
-rpc_evm="yarn run ts-node src/evm.ts"
 
 $rpc_evm deposit -a 1000DEV
 $rpc_evm create -e 10DEV -p 1 -g 1000000 -c `cat $data/evm/erc20.hex`

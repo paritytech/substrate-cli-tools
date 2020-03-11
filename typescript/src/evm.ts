@@ -54,7 +54,7 @@ async function main() {
                     code = `0x${code}`;
                 }
 
-                console.log(`Code to deploy is ${code}`);
+                console.log(`Code to deploy is ${code.substr(0, 8)}...${code.substr(code.length - 8)}`);
 
                 const signer = getSigner(keyring, args.seed as string);
                 const result = await sendAndReturnCollated(signer,
@@ -179,6 +179,12 @@ function extractCode(file: string): string {
     } else {
         return content.toString();
     }
+}
+
+function preview(text: string, n: number): string {
+    return text.substr(0, n) +
+           "..." +
+           text.substr(text.length - n);
 }
 
 main();

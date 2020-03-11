@@ -4,11 +4,23 @@ set -e
 
 root=$(git rev-parse --show-toplevel)
 
+if [[ "$@" == *"--no-compilation"* ]]
+then
+    echo "Skipping compilation"
+    COMPILE="no"
+else
+    COMPILE="yes"
+fi
+
 # TypeScript implementation
 function prototype {
-    cd $root/typescript
-    yarn install 1>&2
-    yarn run tsc 1>&2
+    if [[ $COMPILE == "yes" ]]
+    then
+        cd $root/typescript
+        yarn install 1>&2
+        yarn run tsc 1>&2
+    fi
+
     echo "$root/typescript/dist\njs"
     # prefix to look for executables
     # and extension of executables
@@ -16,8 +28,12 @@ function prototype {
 
 # Rust implementation
 function main {
-    cd $root/rust
-    cargo build --release 1>&2
+    if [[ $COMPILE == "yes" ]]
+    then
+        cd $root/rust
+        cargo build --release 1>&2
+    fi
+
     echo "$root/rust/target/release\n"
     # prefix to look for executables
     # and extension of executables
@@ -49,7 +65,23 @@ function stop_substrate {
 
 ###############################################################################
 
-alias indent="paste /dev/null -"
+if [ -z $(command -v unbuffer) ]
+then
+    echo "(Install utility 'unbuffer' from package 'expect' for pretty output)"
+    unbuf="stdbuf -oL -eL"
+    unbufp="stdbuf -oL -eL"
+else
+    unbuf="unbuffer"
+    unbufp="unbuffer -p"
+fi
+
+function indent { sed -u 's/^/    /' $@; }
+
+function indent2 { sed -u 's/^/    \.   /' $@; }
+
+function indent3 { sed -u 's/^/    .   .   /' $@; }
+
+###############################################################################
 
 function test {
     echo "||| Running tests \"$1\""
@@ -62,8 +94,7 @@ function test {
         for test in $1/*.sh
         do
             echo -e "\t* Test $test"
-            #$(command -v unbuffer) bash $test $prefix $ext | indent | indent
-            bash $test $prefix $ext
+            $unbuf bash $test $prefix $ext | indent2
             echo
         done
     done
