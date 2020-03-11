@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 root=$(git rev-parse --show-toplevel)
 
 if [[ "$@" == *"--no-compilation"* ]]
@@ -10,7 +8,19 @@ then
     COMPILE="no"
 else
     COMPILE="yes"
+
+    cd $root/data/solidity
+
+    rm -rf evm
+    mkdir evm
+    solc --bin -o evm *.sol
+
+    rm -rf wasm
+    mkdir wasm
+    solang -o wasm *.sol
 fi
+
+set -e
 
 # TypeScript implementation
 function prototype {

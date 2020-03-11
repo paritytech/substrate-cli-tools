@@ -7,7 +7,7 @@ data=$root/data
 rpc_evm="$1/evm.$2"
 
 $rpc_evm deposit -a 1000DEV
-$rpc_evm create -e 10DEV -p 1 -g 500000 -c `cat $data/evm/flipper.hex`
+$rpc_evm create -e 10DEV -p 1 -g 500000 -f $data/solidity/evm/Flipper.bin
 
 flip=$($rpc_evm selector "flip()")
 

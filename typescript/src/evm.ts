@@ -172,11 +172,11 @@ async function initialize(): Promise<[ApiPromise, TokenUnit, Keyring]> {
 
 function extractCode(file: string): string {
     const content = fs.readFileSync(file, "utf8");
-    const json = JSON.parse(content);
 
-    if (json) {
+    try {
+        const json = JSON.parse(content);
         return json.object;
-    } else {
+    } catch (e) {
         return content.toString();
     }
 }

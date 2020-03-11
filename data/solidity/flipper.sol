@@ -1,4 +1,4 @@
-contract flipper {
+contract Flipper {
 	bool private value;
 
 	constructor() public payable {
