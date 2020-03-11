@@ -31,7 +31,7 @@ function prototype {
         yarn run tsc 1>&2
     fi
 
-    echo "$root/typescript/dist\njs"
+    echo "$root/typescript/dist/\n.js"
     # prefix to look for executables
     # and extension of executables
 }
@@ -44,7 +44,7 @@ function main {
         cargo build --release 1>&2
     fi
 
-    echo "$root/rust/target/release\n"
+    echo "$root/rust/target/release/\n"
     # prefix to look for executables
     # and extension of executables
 }
@@ -101,7 +101,7 @@ function test {
         prefix=$(echo -e $impl | head -1)
         ext=$(echo -e $impl | tail -1)
 
-        for test in $1/*.sh
+        for test in `ls -1 $1/*.sh | grep -v disabled`
         do
             echo -e "\t* Test $test"
             $unbuf bash $test $prefix $ext | indent2

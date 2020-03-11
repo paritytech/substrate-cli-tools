@@ -6,7 +6,7 @@ data=$root/data
 
 cd $root/typescript
 
-rpc_contracts="$1/contracts.$2"
+rpc_contracts="$1contracts$2"
 
 $rpc_contracts deploy -f $data/ink/flipper.wasm -g 123456
 $rpc_contracts instantiate -h 0x664c16bf52d4456dc626ca45908bf9299494f31e9ea2c22913d2afbca2d975ff -e 1234567DEV -d 0x0222ff18 -g 1234567
