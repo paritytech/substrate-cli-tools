@@ -18,6 +18,8 @@ else
     rm -rf wasm
     mkdir wasm
     solang -o wasm *.sol
+
+    cd -
 fi
 
 set -e
