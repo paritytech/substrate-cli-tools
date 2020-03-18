@@ -1,99 +1,70 @@
 #!/bin/bash
 
-root=$(git rev-parse --show-toplevel)
+# You can set following variables:
+# SUBSTRATE_PATH for running your local Substrate instead of the containerized one
+# SUBSTRATE_EVM_PATH for running your local Substrate instead of the containerized one
 
-if [[ "$@" == *"--no-compilation"* ]]
-then
-    echo "Skipping compilation"
-    COMPILE="no"
-else
-    COMPILE="yes"
+# SUBSTRATE_WS_PORT to change WebSockets port if it is already occupied
+# SUBSTRATE_HTTP_PORT to change HTTP port if it is already occupied
 
-    cd $root/data/solidity
-
-    rm -rf evm
-    mkdir evm
-    solc --bin -o evm *.sol
-
-    rm -rf wasm
-    mkdir wasm
-    solang -o wasm *.sol
-
-    cd -
+if [ -z $SUBSTRATE_WS_PORT ]; then
+    SUBSTRATE_WS_PORT=9944
 fi
+if [ -z $SUBSTRATE_HTTP_PORT ]; then
+    SUBSTRATE_HTTP_PORT=9933
+fi
+
+source utils.sh
 
 set -e
 
-# TypeScript implementation
-function prototype {
-    if [[ $COMPILE == "yes" ]]
-    then
-        cd $root/typescript
-        yarn install 1>&2
-        yarn run tsc 1>&2
-    fi
+root=$(git rev-parse --show-toplevel)
 
-    echo "$root/typescript/dist/\n.js"
-    # prefix to look for executables
-    # and extension of executables
-}
-
-# Rust implementation
-function main {
-    if [[ $COMPILE == "yes" ]]
-    then
-        cd $root/rust
-        cargo build --release 1>&2
-    fi
-
-    echo "$root/rust/target/release/\n"
-    # prefix to look for executables
-    # and extension of executables
-}
-
-#impls="$(prototype) $(main)"
-impls="$(prototype)"
+#impls="$root/typescript/dist/\n.js $root/rust/target/release/"
+impls="$root/typescript/dist/\n.js"
 
 ###############################################################################
 
+substrate_cid=""
+
 function start_substrate {
-    echo "Running Substrate by path:"
-    echo $1
+    if not-initialized "$1"; then
+        echo "Running containerized Substrate"
+        provide-container \
+            "docker.io/parity/substrate:latest" \
+            "Please specify the path to Substrate binary in the environment variable"
 
-    id=$(basename $1)
+        substrate_cid=$($DOCKER run -dt --rm \
+          -p $SUBSTRATE_WS_PORT:9944 \
+          -p $SUBSTRATE_HTTP_PORT:9933 \
+          parity/substrate:latest --dev \
+          --ws-external --rpc-external)
+    else
+        echo "Running Substrate by path:"
+        echo $1
 
-    $1 purge-chain --dev -y &> /dev/null
-    $1 --dev &> $id.log &
-    echo $! > $id.pid
+        bin_id=$(basename $1)
+
+        $1 purge-chain --dev -y
+        $1 --dev \
+          --ws-port $SUBSTRATE_WS_PORT \
+          --rpc-port $SUBSTRATE_HTTP_PORT \
+          &> id.log &
+        echo $! > $bin_id.pid
+    fi
 }
 
 function stop_substrate {
-    echo "Stopping Substrate"
-    id=$(basename $1)
+    echo "Stopping Substrate instance"
+    if [ -z "$substrate_cid" ]; then
+        echo $1 | indent
+        bin_id=$(basename $1)
 
-    kill -9 $(cat $id.pid) &> /dev/null
-    $1 purge-chain --dev -y
+        kill -9 $(cat $bin_id.pid) &> /dev/null
+    else
+        $DOCKER stop $substrate_cid 
+    fi
 }
-
-###############################################################################
-
-if [ -z $(command -v unbuffer) ]
-then
-    echo "(Install utility 'unbuffer' from package 'expect' for pretty output)"
-    unbuf="stdbuf -oL -eL"
-    unbufp="stdbuf -oL -eL"
-else
-    unbuf="unbuffer"
-    unbufp="unbuffer -p"
-fi
-
-function indent { sed -u 's/^/    /' $@; }
-
-function indent2 { sed -u 's/^/    \.   /' $@; }
-
-function indent3 { sed -u 's/^/    .   .   /' $@; }
-
-###############################################################################
 
 function test {
     echo "||| Running tests \"$1\""
@@ -112,22 +83,26 @@ function test {
     done
 }
 
-WITH_CONTRACTS=$1
-WITH_EVM=$2
-
 function stop_all {
-    for path in $WITH_CONTRACTS $WITH_EVM
-    do
-        stop_substrate $path
-    done
+    echo "Ctrl+C caught, shutting down running Substrate instances"
+    if [ -z "$1$2" ]; then
+        stop_substrate
+    else
+        for path in $1 $2
+        do
+            stop_substrate $path
+        done
+    fi
 }
 
 trap stop_all INT
 
-start_substrate $WITH_CONTRACTS
+start_substrate $SUBSTRATE_PATH
 test contracts | indent
-stop_substrate $WITH_CONTRACTS
+stop_substrate $SUBSTRATE_PATH
 
-start_substrate $WITH_EVM
+echo
+
+start_substrate $SUBSTRATE_EVM_PATH
 test evm | indent
-stop_substrate $WITH_EVM
+stop_substrate $SUBSTRATE_EVM_PATH
