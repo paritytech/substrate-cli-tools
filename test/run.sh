@@ -25,6 +25,8 @@ set -e
 
 root=$(git rev-parse --show-toplevel)
 
+filter_by=$1
+
 #impls="$root/typescript/dist/\n.js $root/rust/target/release/"
 impls="$root/typescript/dist/\n.js"
 
@@ -49,11 +51,10 @@ function start_substrate {
           -p $SUBSTRATE_HTTP_PORT:9933 \
           $substrate_image --dev \
           --ws-external --rpc-external)
+        substrate_pid=""
     else
         echo "Running Substrate by path:"
         echo $1
-
-        bin_id=$(basename $1)
 
         if [ -z $DEBUG ]; then
             level=info
@@ -65,24 +66,50 @@ function start_substrate {
         RUST_LOG=$level $1 --dev \
           --ws-port $SUBSTRATE_WS_PORT \
           --rpc-port $SUBSTRATE_HTTP_PORT \
-          &> $bin_id.log &
-        echo $! > $bin_id.pid
+        
+        substrate_pid=$!
+        substrate_cid=""
     fi
 }
 
 function stop_substrate {
     echo "Stopping Substrate instance"
     if [ -z "$substrate_cid" ]; then
-        echo $1 | indent
-        bin_id=$(basename $1)
-
-        kill -9 $(cat $bin_id.pid) &> /dev/null
+        if [ -z "$substrate_pid" ]; then
+            echo "Containers and processes should be already killed." | indent
+        else
+            echo "Killing substrate process $substrate_pid." | indent
+            kill -9 $substrate_pid
+        fi
     else
-        $DOCKER stop $substrate_cid 
+        echo "Stopping substrate container $substrate_cid." | indent
+        $DOCKER stop $substrate_cid | indent
+        substrate_cid=""
 
         if [ ! -z "$DEBUG" ]; then
-            echo "[the container is not deleted due to debug mode]"
+            echo "[the container is not deleted due to debug mode]" | indent
         fi
+    fi
+}
+
+function test_cases_exist {
+    if [ -z $2 ]; then
+        test_cases=$(ls -1 $1/*.sh)
+    else
+        test_cases=$(ls -1 $1/*.sh | grep $2)
+    fi
+
+    if [ -z "$test_cases" ]; then
+        echo "There are no test cases in suite '$1'" ${2:+"matching $2"}
+
+        return 1
+    else
+        echo "Test cases in suite '$1'" ${2:+"matching $2"}
+        for t in $test_cases; do
+            echo $t | indent
+        done
+
+        return 0
     fi
 }
 
@@ -109,26 +136,23 @@ function test {
     done
 }
 
-function stop_all {
-    echo "Ctrl+C caught, shutting down running Substrate instances"
-    if [ -z "$1$2" ]; then
-        stop_substrate
-    else
-        for path in $1 $2
-        do
-            stop_substrate $path
-        done
-    fi
-}
+# with /bin/bash, EXIT includes INT, but this is not the case with /bin/sh
+trap stop_substrate EXIT
 
-trap stop_all INT
-
-start_substrate $SUBSTRATE_PATH
-test contracts $1 | indent
-stop_substrate $SUBSTRATE_PATH
+if test_cases_exist contracts $filter_by; then
+    start_substrate $SUBSTRATE_PATH
+    test contracts $filter_by | indent
+    stop_substrate
+else
+    echo "There are no test cases in 'contracts' matching '$filter_by'"
+fi
 
 echo
 
-start_substrate $SUBSTRATE_EVM_PATH
-test evm $1 | indent
-stop_substrate $SUBSTRATE_EVM_PATH
+if test_cases_exist evm $filter_by; then
+    start_substrate $SUBSTRATE_EVM_PATH
+    test evm $filter_by | indent
+    stop_substrate
+else
+    echo "There is no test cases in 'evm' matching '$filter_by'"
+fi
