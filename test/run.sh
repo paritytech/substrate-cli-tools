@@ -66,6 +66,7 @@ function start_substrate {
         RUST_LOG=$level $1 --dev \
           --ws-port $SUBSTRATE_WS_PORT \
           --rpc-port $SUBSTRATE_HTTP_PORT \
+            &> $(basename $1).log &
         
         substrate_pid=$!
         substrate_cid=""
@@ -143,8 +144,6 @@ if test_cases_exist contracts $filter_by; then
     start_substrate $SUBSTRATE_PATH
     test contracts $filter_by | indent
     stop_substrate
-else
-    echo "There are no test cases in 'contracts' matching '$filter_by'"
 fi
 
 echo
@@ -153,6 +152,4 @@ if test_cases_exist evm $filter_by; then
     start_substrate $SUBSTRATE_EVM_PATH
     test evm $filter_by | indent
     stop_substrate
-else
-    echo "There is no test cases in 'evm' matching '$filter_by'"
 fi

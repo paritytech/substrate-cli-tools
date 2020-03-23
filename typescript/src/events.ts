@@ -80,10 +80,10 @@ async function main() {
         error("Ambiguous filter encountered, you must specify explicitly how to use it (+ or -)");
     }
 
-    const api = new ApiPromise({
-        provider: getWsProvider(),
-        typesChain: TYPES,
-    });
+    const api = await ApiPromise.create(Object.assign(
+        { provider: getWsProvider() },
+        TYPES
+    ));
     await api.isReady;
 
     api.query.system.events((events: Vec<EventRecord>) => {

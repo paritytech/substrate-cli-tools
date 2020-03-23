@@ -11,9 +11,17 @@ export const TYPES = {
             topics: "Vec<H256>",
             data: "Vec<u8>",
         },
+
+        //custom EVM events:
+        StorageWritten: {
+            address: "H160",
+            indices: "Vec<H256>"
+        },
+        StorageReset: {
+            address: "H160",
+        }
     },
     typesSpec: {
-        "node": {},
         "node-template": {
             Address: "AccountId",
             LookupSource: "AccountId",

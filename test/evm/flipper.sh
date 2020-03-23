@@ -11,7 +11,7 @@ $rpc_evm create -e 10DEV -p 1 -g 500000 -f $data/solidity/evm/Flipper.bin
 
 flip=$($rpc_evm selector "flip()")
 
-$rpc_evm call -e 1DEV -p 1 -g 500000 -a 0x11650d764feb44f78810ef08700c2284f7e81dcb -d $flip
+$rpc_evm call -a 0x11650d764feb44f78810ef08700c2284f7e81dcb -e 1DEV -p 1 -g 500000 -d $flip
 $rpc_evm info -a 0x11650d764feb44f78810ef08700c2284f7e81dcb -i 0x0000000000000000000000000000000000000000000000000000000000000000
-$rpc_evm call -e 1DEV -p 1 -g 500000 -a 0x11650d764feb44f78810ef08700c2284f7e81dcb -d $flip
+$rpc_evm call -a 0x11650d764feb44f78810ef08700c2284f7e81dcb -e 1DEV -p 1 -g 500000 -d $flip
 $rpc_evm info -a 0x11650d764feb44f78810ef08700c2284f7e81dcb -i 0x0000000000000000000000000000000000000000000000000000000000000000
