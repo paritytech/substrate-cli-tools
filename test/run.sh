@@ -7,15 +7,15 @@
 # SUBSTRATE_WS_PORT to change WebSockets port if it is already occupied
 # SUBSTRATE_HTTP_PORT to change HTTP port if it is already occupied
 
-if [[ $@ == *"--debug"* ]]; then
+if [[ "$*" == *"--debug"* ]]; then
     echo "[debug mode on]"
     DEBUG=true
 fi
 
-if [ -z $SUBSTRATE_WS_PORT ]; then
+if [ -z "$SUBSTRATE_WS_PORT" ]; then
     SUBSTRATE_WS_PORT=9944
 fi
-if [ -z $SUBSTRATE_HTTP_PORT ]; then
+if [ -z "$SUBSTRATE_HTTP_PORT" ]; then
     SUBSTRATE_HTTP_PORT=9933
 fi
 
@@ -38,7 +38,7 @@ function start_substrate {
         substrate_image="$1"
         couldnt_find_message="Please specify the path to Substrate binary in the environment variable"
 
-        provide-container $substrate_image $couldnt_find_message
+        provide-container "$substrate_image" "$couldnt_find_message"
 
         if [ -z $DEBUG ]; then
             docker_extra="--rm"
@@ -46,15 +46,15 @@ function start_substrate {
             docker_extra="-e RUST_LOG=debug"
         fi
 
-        substrate_cid=$($DOCKER run -dt $docker_extra \
+        substrate_cid=$($DOCKER run -dt "${docker_extra[@]}" \
           -p $SUBSTRATE_WS_PORT:9944 \
           -p $SUBSTRATE_HTTP_PORT:9933 \
-          $substrate_image --dev \
+          "$substrate_image" --dev \
           --ws-external --rpc-external)
         substrate_pid=""
     else
         echo "Running Substrate by path:"
-        echo $2
+        echo "$2"
 
         if [ -z $DEBUG ]; then
             level=info
@@ -66,7 +66,7 @@ function start_substrate {
         RUST_LOG=$level $2 --dev \
           --ws-port $SUBSTRATE_WS_PORT \
           --rpc-port $SUBSTRATE_HTTP_PORT \
-            &> $(basename $2).log &
+            &> "$(basename "$2")".log &
         
         substrate_pid=$!
         substrate_cid=""
@@ -84,20 +84,20 @@ function stop_substrate {
         fi
     else
         echo "Stopping substrate container $substrate_cid." | indent
-        $DOCKER stop $substrate_cid | indent
+        $DOCKER stop "$substrate_cid" | indent
         substrate_cid=""
 
-        if [ ! -z "$DEBUG" ]; then
+        if [ -n "$DEBUG" ]; then
             echo "[the container is not deleted due to debug mode]" | indent
         fi
     fi
 }
 
 function test_cases_exist {
-    if [ -z $2 ]; then
-        test_cases=$(ls -1 $1/*.sh)
+    if [ -z "$2" ]; then
+        test_cases=$(ls -1 "$1"/*.sh)
     else
-        test_cases=$(ls -1 $1/*.sh | grep $2)
+        test_cases=$(ls -1 "$1"/*.sh | grep "$2")
     fi
 
     if [ -z "$test_cases" ]; then
@@ -107,7 +107,7 @@ function test_cases_exist {
     else
         echo "Test cases in suite '$1'" ${2:+"matching $2"}
         for t in $test_cases; do
-            echo $t | indent
+            echo "$t" | indent
         done
 
         return 0
@@ -119,8 +119,8 @@ function test {
 
     for impl in $impls
     do
-        prefix=$(echo -e $impl | head -1)
-        ext=$(echo -e $impl | tail -1)
+        prefix=$(echo -e "$impl" | head -1)
+        ext=$(echo -e "$impl" | tail -1)
 
         if [ -z "$2" ]; then
             filter="grep -v disabled"
@@ -128,10 +128,10 @@ function test {
             filter="grep $2"
         fi
 
-        for test in `ls -1 $1/*.sh | $filter`
+        for test in $(ls -1 "$1"/*.sh | $filter)
         do
             echo -e "\t* Test $test"
-            $unbuf bash $test $prefix $ext | indent2
+            $unbuf bash "$test" "$prefix" "$ext" | indent2
             echo
         done
     done
@@ -140,16 +140,16 @@ function test {
 # with /bin/bash, EXIT includes INT, but this is not the case with /bin/sh
 trap stop_substrate EXIT
 
-if test_cases_exist contracts $filter_by; then
-    start_substrate "docker.io/parity/substrate:latest" $SUBSTRATE_PATH
-    test contracts $filter_by | indent
+if test_cases_exist contracts "$filter_by"; then
+    start_substrate "docker.io/parity/substrate:latest" "$SUBSTRATE_PATH"
+    test contracts "$filter_by" | indent
     stop_substrate
 fi
 
 echo
 
-if test_cases_exist evm $filter_by; then
-    start_substrate "docker.io/kirillt/substrate-evm-enabled:latest" $SUBSTRATE_EVM_PATH
-    test evm $filter_by | indent
+if test_cases_exist evm "$filter_by"; then
+    start_substrate "docker.io/kirillt/substrate-evm-enabled:latest" "$SUBSTRATE_EVM_PATH"
+    test evm "$filter_by" | indent
     stop_substrate
 fi

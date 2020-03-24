@@ -12,13 +12,13 @@ function provide-container {
         exit 1
     fi
 
-    if ! $DOCKER image exists $1; then
-        $DOCKER image pull $1
+    if ! $DOCKER image exists "$1"; then
+        $DOCKER image pull "$1"
     fi
 }
 
 function not-initialized {
-    if [ ! -z "$1" ] && [ ! -f "$1" ]; then
+    if [ -n "$1" ] && [ ! -f "$1" ]; then
         >&2 echo "$1 doesn't exist"
         exit 2 # user pretends to know what he is doing,
                # but the path is incorrect
@@ -34,16 +34,15 @@ function not-initialized {
 }
 
 function provide-solang {
-    solang_image="docker.io/hyperledgerlabs/solang:latest"
-    couldnt_find_message="Please specify the path to Solang in the SOLANG_PATH environment variable"
-
     # we are good only with the latest or explicitly specified Solang
     if not-initialized "$SOLANG_PATH"; then
-        provide-container $solang_image $couldnt_find_message
+        solang_image="docker.io/hyperledgerlabs/solang:latest"
+        couldnt_find_message="Please specify the path to Solang in the SOLANG_PATH environment variable"
+        provide-container $solang_image "$couldnt_find_message"
 
-        function solang { $DOCKER run -it --rm -v $PWD:/x:z -w /x $solang_image $@ && echo ok; }
+        function solang { $DOCKER run -it --rm -v "$PWD":/x:z -w /x $solang_image "$@" && echo ok; }
     else
-        function solang { $SOLANG_PATH $@; }
+        function solang { $SOLANG_PATH "$@"; }
     fi
 
     export -f solang
@@ -55,11 +54,11 @@ function provide-solc {
 
     # we are good only with the latest stable or explicitly specified Solc
     if not-initialized "$SOLC_PATH"; then
-        provide-container $solc_image $couldnt_find_message
+        provide-container $solc_image "$couldnt_find_message"
 
-        function solc { $DOCKER run -it --rm -v $PWD:/x:z -w /x $solc_image $@ 1> /dev/null && echo ok; }
+        function solc { $DOCKER run -it --rm -v "$PWD":/x:z -w /x $solc_image "$@" 1> /dev/null && echo ok; }
     else
-        function solc { $SOLANG_PATH $@; }
+        function solc { $SOLANG_PATH "$@"; }
     fi
 
     export -f solc
@@ -67,7 +66,7 @@ function provide-solc {
 
 
 
-if [ -z $(command -v unbuffer) ]
+if [ -z "$(command -v unbuffer)" ]
 then
     echo "(Install utility 'unbuffer' from package 'expect' for pretty output)"
     unbuf="stdbuf -oL -eL"
@@ -77,8 +76,8 @@ else
     unbufp="unbuffer -p"
 fi
 
-function indent { sed -u 's/^/    /' $@; }
+function indent { sed -u 's/^/    /' "$@"; }
 
-function indent2 { sed -u 's/^/    \.   /' $@; }
+function indent2 { sed -u 's/^/    \.   /' "$@"; }
 
-function indent3 { sed -u 's/^/    .   .   /' $@; }
+function indent3 { sed -u 's/^/    .   .   /' "$@"; }
