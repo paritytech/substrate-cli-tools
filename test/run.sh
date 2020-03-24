@@ -33,11 +33,11 @@ impls="$root/typescript/dist/\n.js"
 substrate_cid=""
 
 function start_substrate {
-    substrate_image="docker.io/parity/substrate:latest"
-    couldnt_find_message="Please specify the path to Substrate binary in the environment variable"
-
-    if not-initialized "$1"; then
+    if not-initialized "$2"; then
         echo "Running containerized Substrate"
+        substrate_image="$1"
+        couldnt_find_message="Please specify the path to Substrate binary in the environment variable"
+
         provide-container $substrate_image $couldnt_find_message
 
         if [ -z $DEBUG ]; then
@@ -54,7 +54,7 @@ function start_substrate {
         substrate_pid=""
     else
         echo "Running Substrate by path:"
-        echo $1
+        echo $2
 
         if [ -z $DEBUG ]; then
             level=info
@@ -62,11 +62,11 @@ function start_substrate {
             level=debug
         fi
 
-        $1 purge-chain --dev -y
-        RUST_LOG=$level $1 --dev \
+        $2 purge-chain --dev -y
+        RUST_LOG=$level $2 --dev \
           --ws-port $SUBSTRATE_WS_PORT \
           --rpc-port $SUBSTRATE_HTTP_PORT \
-            &> $(basename $1).log &
+            &> $(basename $2).log &
         
         substrate_pid=$!
         substrate_cid=""
@@ -141,7 +141,7 @@ function test {
 trap stop_substrate EXIT
 
 if test_cases_exist contracts $filter_by; then
-    start_substrate $SUBSTRATE_PATH
+    start_substrate "docker.io/parity/substrate:latest" $SUBSTRATE_PATH
     test contracts $filter_by | indent
     stop_substrate
 fi
@@ -149,7 +149,7 @@ fi
 echo
 
 if test_cases_exist evm $filter_by; then
-    start_substrate $SUBSTRATE_EVM_PATH
+    start_substrate "docker.io/kirillt/substrate-evm-enabled:latest" $SUBSTRATE_EVM_PATH
     test evm $filter_by | indent
     stop_substrate
 fi
