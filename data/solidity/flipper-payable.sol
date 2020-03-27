@@ -1,11 +1,11 @@
-contract flipper2 {
+contract Flipper_payable {
 	bool private value;
 
-	constructor(bool initvalue) public {
-		value = initvalue;
+	constructor() public payable {
+		value = false;
 	}
 
-	function flip() public {
+	function flip() public payable {
 		value = !value;
 	}
 

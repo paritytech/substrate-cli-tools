@@ -19,11 +19,12 @@ if [ -z "$SUBSTRATE_HTTP_PORT" ]; then
     SUBSTRATE_HTTP_PORT=9933
 fi
 
-source utils.sh
+root=$(git rev-parse --show-toplevel)
+
+source "$root"/test/utils.sh
 
 set -e
 
-root=$(git rev-parse --show-toplevel)
 
 filter_by=$1
 
@@ -95,9 +96,9 @@ function stop_substrate {
 
 function test_cases_exist {
     if [ -z "$2" ]; then
-        test_cases=$(ls -1 "$1"/*.sh)
+        test_cases=$(ls -1 "$root/test/$1"/*.sh)
     else
-        test_cases=$(ls -1 "$1"/*.sh | grep "$2")
+        test_cases=$(ls -1 "$root/test/$1"/*.sh | grep "$2")
     fi
 
     if [ -z "$test_cases" ]; then
@@ -128,7 +129,7 @@ function test {
             filter="grep $2"
         fi
 
-        for test in $(ls -1 "$1"/*.sh | $filter)
+        for test in $(ls -1 "$root/test/$1"/*.sh | $filter)
         do
             echo -e "\t* Test $test"
             $unbuf bash "$test" "$prefix" "$ext" | indent2

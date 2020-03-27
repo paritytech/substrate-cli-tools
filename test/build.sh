@@ -1,11 +1,10 @@
 #!/bin/bash
 
-source utils.sh
+root=$(git rev-parse --show-toplevel)
+source "$root/test/utils.sh"
 
 provide-solc
 provide-solang
-
-root=$(git rev-parse --show-toplevel)
 
 # Building contracts to test
 
