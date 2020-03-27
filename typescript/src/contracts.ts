@@ -25,25 +25,29 @@ async function main() {
     const keyring = new Keyring({ type: "sr25519" });
 
     yargs
+        .boolean("q") // pass -q for quiet mode
         .option("seed", { alias: "s", global: true, default: "//Alice" })
         .option("gas", { alias: "g", type: "number" })
         .command("deploy", "Upload a contract from a file",
             (args: Argv) => {
                 return args.option("file", { alias: "f", type: "string" });
             }, async (args: Arguments) => {
-                const signer = getSigner(keyring, args.seed as string);
+                const quiet = args.q as boolean;
+                const verbose_log = noisy(quiet);
 
                 const gas = args.gas as number;
-                console.log("Deploying code");
-                console.log("\tsource:", args.file);
-                console.log("\tgas:", gas);
+                verbose_log("Deploying code");
+                verbose_log(`\tsource: ${args.file}`);
+                verbose_log(`\tgas: ${gas}`)
 
                 const wasm = fs
                     .readFileSync(args.file as string)
                     .toString("hex");
                 const tx = api.tx.contracts.putCode(gas, `0x${wasm}`);
 
-                const result: any = await sendAndReturnCollated(signer, tx);
+                const signer = getSigner(keyring, args.seed as string, quiet);
+
+                const result: any = await sendAndReturnCollated(signer, tx, quiet);
                 const record = result.findRecord("contracts", "CodeStored");
 
                 if (!record) {
@@ -63,19 +67,22 @@ async function main() {
                     .option("endowment", { alias: "e", type: "string" })
                     .option("data", { alias: "d", type: "string" });
             }, async (args: Arguments) => {
+                const quiet = args.q as boolean;
+                const verbose_log = noisy(quiet);
+
                 const gas = args.gas as number;
                 const endowment = token.parseBalance(args.endowment as string);
 
-                console.log(`Instantiating contract`);
-                console.log(`\tcode hash: ${args.hash}`);
-                console.log("\tendowment:", token.display(endowment));
-                console.log("\tgas:", gas);
+                verbose_log(`Instantiating contract`);
+                verbose_log(`\tcode hash: ${args.hash}`);
+                verbose_log(`\tendowment: ${token.display(endowment)}`);
+                verbose_log(`\tgas: ${gas}`);
 
-                const signer = getSigner(keyring, args.seed as string);
+                const signer = getSigner(keyring, args.seed as string, quiet);
 
                 const tx = api.tx.contracts.instantiate(endowment, gas, args.hash as string, args.data as string);
 
-                const result: any = await sendAndReturnCollated(signer, tx);
+                const result: any = await sendAndReturnCollated(signer, tx, quiet);
                 const instantiated = result.findRecord("contracts", "Instantiated");
 
                 if (!instantiated) {
@@ -95,18 +102,21 @@ async function main() {
                     .option("endowment", { alias: "e", type: "string" })
                     .option("data", { alias: "d", type: "string" });
             }, async (args: Arguments) => {
+                const quiet = args.q as boolean;
+                const verbose_log = noisy(quiet);
+
                 const gas = args.gas as number;
                 const endowment = token.parseBalance(args.endowment as string);
 
-                console.log(`Calling contract`);
-                console.log(`\taddress: ${args.address}`);
-                console.log(`\tdata: ${args.data}`);
-                console.log("\tendowment:", token.display(endowment));
-                console.log("\tgas:", gas);
+                verbose_log(`Calling contract`);
+                verbose_log(`\taddress: ${args.address}`);
+                verbose_log(`\tdata: ${args.data}`);
+                verbose_log(`\tendowment: ${token.display(endowment)}`);
+                verbose_log(`\tgas:" ${gas}`);
 
-                const signer = getSigner(keyring, args.seed as string);
+                const signer = getSigner(keyring, args.seed as string, quiet);
                 const tx = api.tx.contracts.call(args.address as string, endowment, gas, args.data as string);
-                await sendAndReturnCollated(signer, tx);
+                await sendAndReturnCollated(signer, tx, quiet);
                 console.log("Call performed");
 
                 process.exit(0);
@@ -115,10 +125,13 @@ async function main() {
             (args: Argv) => {
                 return args.option("address", { alias: "a", type: "string" });
             }, async (args: Arguments) => {
-                console.log(`Reguesting contract's info`);
-                console.log(`\taddress: ${args.address}`);
+                const quiet = args.q as boolean;
+                const verbose_log = noisy(quiet);
+
+                verbose_log(`Reguesting contract's info`);
+                verbose_log(`\taddress: ${args.address}`);
                 const info = await api.query.contracts.contractInfoOf(args.address as string);
-                console.log("Info:", JSON.stringify(info, null, 2));
+                verbose_log(`Info: ${JSON.stringify(info, null, 2)}`);
 
                 const trieId = (info as Option<ContractInfo>).unwrap().asAlive.trieId;
                 const trieIdWithoutPrefix = trieId.subarray(trieId.byteLength - 32, trieId.byteLength);
@@ -126,7 +139,7 @@ async function main() {
                 const childStorageKey = u8aToHex(trieId);
                 const childInfo = u8aToHex(trieIdWithoutPrefix);
 
-                console.log("Storage:");
+                verbose_log("Storage:");
                 const keys = await api.rpc.state.getChildKeys(childStorageKey, childInfo, 1, ROOT_PREFIX);
                 // @ts-ignore
                 for (const key of keys) {
@@ -141,6 +154,14 @@ async function main() {
 }
 
 const ROOT_PREFIX: Uint8Array = new Uint8Array(0);
+
+function noisy(quiet: boolean) {
+    if (quiet) {
+        return (msg) => {};
+    } else {
+        return (msg) => console.log(msg);
+    }
+}
 
 main().catch((error) => {
     console.error(error);

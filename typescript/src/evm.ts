@@ -17,6 +17,7 @@ import { TYPES } from "./utils/types";
 
 async function main() {
     yargs
+        .boolean("q") // pass -q for quiet mode
         .option("seed", { alias: "s", global: true, default: "//Alice" })
         .command("create", "Upload a contract from a file",
             (args: Argv) => {
@@ -27,12 +28,15 @@ async function main() {
                     .option("price", { alias: "p", type: "string" })
                     .option("endowment", { alias: "e", type: "string" });
             }, async (args: Arguments) => {
+                const quiet = args.q as boolean;
+                const verbose_log = noisy(quiet);
+
                 const [api, token, keyring] = await initialize();
 
                 const gas = args.gas as number;
                 const price = token.parseBalance(args.price as string);
                 const endowment = token.parseBalance(args.endowment as string);
-                console.log(`Creating contract with `
+                verbose_log(`Creating contract with `
                 + `gas price of ${token.display(price)}, `
                 + `${token.display(endowment)} as an endowment and `
                 + `${gas} of gas`);
@@ -40,25 +44,25 @@ async function main() {
                 let code = args.code as string;
                 if (!code) {
                     if (!args.file) {
-                        console.log("Provide either code with -c option or path to file with -f");
+                        console.error("Provide either code with -c option or path to file with -f");
                         process.exit(-1);
                     }
-                    console.log(`Reading code from file ${args.file}`);
+                    verbose_log(`Reading code from file ${args.file}`);
                     code = extractCode(args.file as string);
                 } else {
                     if (args.file) {
-                        console.log("Code is provided with -c option, ignoring provided file");
+                        console.warn("Code is provided with -c option, ignoring provided file");
                     }
                 }
                 if (!code.startsWith("0x")) {
                     code = `0x${code}`;
                 }
 
-                console.log(`Code to deploy is ${code.substr(0, 8)}...${code.substr(code.length - 8)}`);
+                verbose_log(`Code to deploy is ${code.substr(0, 8)}...${code.substr(code.length - 8)}`);
 
-                const signer = getSigner(keyring, args.seed as string);
-                const result = await sendAndReturnCollated(signer,
-                    api.tx.evm.create(code, endowment, gas, price, null));
+                const signer = getSigner(keyring, args.seed as string, quiet);
+                const tx = api.tx.evm.create(code, endowment, gas, price, null);
+                const result = await sendAndReturnCollated(signer, tx, quiet);
                 const created = result.findRecord("evm", "Created");
 
                 if (!created) {
@@ -80,21 +84,25 @@ async function main() {
                     .option("endowment", {alias: "e", type: "string"})
                     .option("data", { alias: "d", type: "string" });
             }, async (args: Arguments) => {
+                const quiet = args.q as boolean;
+                const verbose_log = noisy(quiet);
+
                 const [api, token, keyring] = await initialize();
 
                 const gas = args.gas as number;
                 const price = token.parseBalance(args.price as string);
                 const endowment = token.parseBalance(args.endowment as string);
-                console.log(`Calling contract`);
-                console.log(`\taddress: ${args.address}`);
-                console.log(`\tdata: ${args.data}`);
-                console.log("\tendowment:", token.display(endowment));
-                console.log("\tgas price:", token.display(price));
-                console.log("\tgas limit:", gas);
+                verbose_log(`Calling contract`);
+                verbose_log(`\taddress: ${args.address}`);
+                verbose_log(`\tdata: ${args.data}`);
+                verbose_log(`\tendowment: ${token.display(endowment)}`);
+                verbose_log(`\tgas price: ${token.display(price)}`);
+                verbose_log(`\tgas limit: ${gas}`);
 
-                const signer = getSigner(keyring, args.seed as string);
+                const signer = getSigner(keyring, args.seed as string, quiet);
                 const tx = api.tx.evm.call(args.address as string, args.data as string, endowment, gas, price, null);
-                await sendAndReturnCollated(signer, tx);
+                await sendAndReturnCollated(signer, tx, quiet);
+                console.log("Call performed");
 
                 process.exit(0);
             })
@@ -106,7 +114,10 @@ async function main() {
             }, async (args: Arguments) => {
                 const [api, token, keyring] = await initialize();
 
-                console.log("State:")
+                if (!args.q as boolean) {
+                    console.log("State:")
+                }
+
                 const idx = args.index as string;
                 const storage = await api.query.evm.accountStorages(args.address as string, idx);
                 console.log(`[${idx}]`, JSON.stringify(storage, null, 2));
@@ -117,13 +128,14 @@ async function main() {
             (args: Argv) => {
                 return args.option("amount", { alias: "a", type: "string" });
             }, async (args: Arguments) => {
+                const quiet = args.q as boolean;
                 const [api, token, keyring] = await initialize();
 
                 const value: Balance = token.parseBalance(args.amount as string);
                 console.log(`Depositing ${token.display(value)} to ${constructLabel(args.seed as string)}`);
 
-                const signer = getSigner(keyring, args.seed as string);
-                await sendAndReturnCollated(signer, api.tx.evm.depositBalance(value));
+                const signer = getSigner(keyring, args.seed as string, quiet);
+                await sendAndReturnCollated(signer, api.tx.evm.depositBalance(value), quiet);
 
                 process.exit(0);
             })
@@ -131,13 +143,14 @@ async function main() {
             (args: Argv) => {
                 return args.option("amount", { alias: "a", type: "string" });
             }, async (args: Arguments) => {
+                const quiet = args.q as boolean;
                 const [api, token, keyring] = await initialize();
 
                 const value: Balance = token.parseBalance(args.amount as string);
                 console.log(`Withdrawing ${token.display(value)} from ${constructLabel(args.seed as string)}`);
 
-                const signer = getSigner(keyring, args.seed as string);
-                await sendAndReturnCollated(signer, api.tx.evm.withdrawBalance(value));
+                const signer = getSigner(keyring, args.seed as string, quiet);
+                await sendAndReturnCollated(signer, api.tx.evm.withdrawBalance(value), quiet);
 
                 process.exit(0);
             })
@@ -185,6 +198,14 @@ function preview(text: string, n: number): string {
     return text.substr(0, n) +
            "..." +
            text.substr(text.length - n);
+}
+
+function noisy(quiet: boolean) {
+    if (quiet) {
+        return (msg) => {};
+    } else {
+        return (msg) => console.log(msg);
+    }
 }
 
 main();
