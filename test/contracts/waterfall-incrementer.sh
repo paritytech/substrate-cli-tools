@@ -4,8 +4,6 @@ set -e
 root=$(git rev-parse --show-toplevel)
 data=$root/data
 
-cd $root/typescript
-
 rpc_contracts="$1contracts$2 -q"
 
 $rpc_contracts deploy -f $data/waterfall/asmscript/incrementer.wasm -g 10000

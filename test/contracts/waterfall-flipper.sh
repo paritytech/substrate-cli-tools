@@ -4,8 +4,6 @@ set -e
 root=$(git rev-parse --show-toplevel)
 data=$root/data
 
-cd $root/typescript
-
 rpc_contracts="$1contracts$2 -q"
 
 initvalue=0x1337 #contracts_bug: Substrate accepts any value here

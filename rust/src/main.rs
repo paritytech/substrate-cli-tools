@@ -66,7 +66,7 @@ fn main() {
     println!("Contract instantiated: {:?}", &address);
 
     for method in args {
-        //todo: so far, it is supposed to use only with 0-ary methods
+        //todo: so far, it is supposed to be used only with 0-ary methods
         let result = call(&xt, &mut rt, 500_000, &code_hash, &method).unwrap();
     }
 }
