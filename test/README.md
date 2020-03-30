@@ -2,12 +2,24 @@
 
 The script `run.sh` will run all tests for both implementations
 (prototype in TypeScript and main version in Rust). For testing
-normal contracts EVM and testing EVM two different Substrate
-versions are used: plain substrate and fork of node-template.
+normal contracts and for testing EVM, two different Substrate
+versions are used: plain substrate and substrate-evm-enabled fork.
 
-This will change when I move EVM from `node-template` to `node`,
-then the same executable will have both modules.
+By default, necessary versions are pulled via Podman/Docker:
+```
+./run.sh
+```
 
+### Custom node to test against
+
+You can override variables `SUBSTRATE_PATH` and `SUBSTRATE_EVM_PATH` if you want to run tests
+against your version of Substrate/EVM.
+
+### Filtering
+
+You can also specify pattern to filter test cases:
 ```
-./run.sh <path1> <path2>
+./run.sh solang-flipper
 ```
+If a test suite is empty after filtering,
+the corresponding Node will not be started.
