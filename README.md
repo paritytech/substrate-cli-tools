@@ -5,7 +5,7 @@ At the moment, implemented in Typescript. In future, it is going to be ported to
 
 Add yarn binaries folder into yout PATH:
 ```
-echo "export PATH=$(yarn global bin):$PATH'" >> ~/.bashrc
+echo "export PATH=$(yarn global bin):$PATH" >> ~/.bashrc
 source ~/.bashrc
 ```
 
